@@ -2,6 +2,7 @@
 
 import svg from './svg.js';
 import Alpine from 'alpinejs';
+import { canvasPointFromClient, PointerSwapSession } from './puzzle-coordinates.js';
 
 window.Alpine = Alpine;
 Alpine.start();
@@ -83,8 +84,7 @@ class Jumbler
     this.tW = 0;
     this.tH = 0;
     this.total = 0;
-    this.firstP = 0;
-    this.secondP = 0;
+    this.pointerSession = new PointerSwapSession();
 
     this.scale = 0.6;
     this.original = [];
@@ -384,90 +384,81 @@ class Jumbler
     }
   }
 
-  mouse_down(x, y)
+  puzzleState()
   {
-    if(this.show_original === true) return;
-    let scrollXAmount = window.scrollX;
-    let scrollYAmount = window.scrollY;
-    x += scrollXAmount;
-    y += scrollYAmount;
-    let segX = Math.floor(x / this.tW);
-    let segY = Math.floor(y / this.tH);
-    this.firstP = segX * this.stored_columns + segY;
+    return {
+      canvasWidth: CANVAS.width,
+      canvasHeight: CANVAS.height,
+      tilesAcross: Number(this.stored_rows),
+      tilesDown: Number(this.stored_columns),
+      fragments: this.fragments,
+    };
   }
 
-  mouse_up(x, y)
+  pointer_down(pointerId, point)
   {
-    if(this.show_original === true) return;
-    let scrollXAmount = window.scrollX;
-    let scrollYAmount = window.scrollY;
-    x += scrollXAmount;
-    y += scrollYAmount;
-    let segX = Math.floor(x / this.tW);
-    let segY = Math.floor(y / this.tH);
-    this.secondP = segX * this.stored_columns + segY;
-  
-    if(this.firstP != this.secondP)
+    if(this.show_original === true) return false;
+    return this.pointerSession.begin(pointerId, point, this.puzzleState());
+  }
+
+  pointer_up(pointerId, point)
+  {
+    if(this.show_original === true) return this.pointerSession.cancel(pointerId);
+
+    const result = this.pointerSession.finish(pointerId, point, this.puzzleState());
+    if(result.valid)
     {
-      let f1 = this.fragments[this.firstP].frag;
-      let f2 = this.fragments[this.secondP].frag;
-      this.fragments[this.firstP].frag = f2;
-      this.fragments[this.secondP].frag = f1;
+      this.draw();
+      this.complete();
     }
-    this.draw();
-    this.complete();
+    return result.handled;
+  }
+
+  pointer_cancel(pointerId)
+  {
+    return this.pointerSession.cancel(pointerId);
   }
 }
 
-CANVAS.onmousedown = function(event) {
-  event.preventDefault();
-  const scrollX = window.scrollX;
-  const scrollY = window.scrollY;
-  let rect = CANVAS.getBoundingClientRect();
-  let x = event.clientX - rect.left - scrollX;
-  let y = event.clientY - rect.top - scrollY;
-  window.jumbler.mouse_down(x, y);
-};
+function canvasPointForPointer(event)
+{
+  return canvasPointFromClient(
+    event.clientX,
+    event.clientY,
+    CANVAS.getBoundingClientRect(),
+    CANVAS.width,
+    CANVAS.height,
+  );
+}
 
-
-CANVAS.onmouseup = function(event)
+CANVAS.addEventListener('pointerdown', function(event)
 {
   event.preventDefault();
-  const scrollX = window.scrollX;
-  const scrollY = window.scrollY;
-  let rect = CANVAS.getBoundingClientRect();
-  let x = event.clientX - rect.left - scrollX;
-  let y = event.clientY - rect.top - scrollY;
-  window.jumbler.mouse_up(x, y);
-};
-
-CANVAS.ontouchstart = function(event)
-{
-  event.preventDefault();
-
-  if(event.touches != undefined)
+  const point = canvasPointForPointer(event);
+  if(window.jumbler.pointer_down(event.pointerId, point))
   {
-    let rect = CANVAS.getBoundingClientRect();
-    let touch = event.touches[0] || event.changedTouches[0];
-    let x = touch.pageX - rect.left;
-    let y = touch.pageY - rect.top;
-    window.jumbler.mouse_down(x, y);
+    CANVAS.setPointerCapture(event.pointerId);
   }
-};
+});
 
-CANVAS.ontouchend = function(event)
+CANVAS.addEventListener('pointerup', function(event)
 {
   event.preventDefault();
+  const point = canvasPointForPointer(event);
+  if(!window.jumbler.pointer_up(event.pointerId, point)) return;
 
-  if(event.touches != undefined)
-  {
-    let rect = CANVAS.getBoundingClientRect();
-    let touch = event.touches[0] || event.changedTouches[0];
-    let x = touch.pageX - rect.left;
-    let y = touch.pageY - rect.top;
-    window.jumbler.mouse_up(x, y);
-  }
-};
+  if(CANVAS.hasPointerCapture(event.pointerId)) CANVAS.releasePointerCapture(event.pointerId);
+});
+
+CANVAS.addEventListener('pointercancel', function(event)
+{
+  window.jumbler.pointer_cancel(event.pointerId);
+});
+
+CANVAS.addEventListener('lostpointercapture', function(event)
+{
+  window.jumbler.pointer_cancel(event.pointerId);
+});
 
 function start()
 {

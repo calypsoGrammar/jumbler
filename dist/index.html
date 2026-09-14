@@ -3,61 +3,136 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <link rel="icon" href="./assets/favicon-82fbd818.ico">
+    <link rel="icon" href="/jumbler/assets/favicon-82fbd818.ico">
     
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Unkempt:wght@400;700&display=swap" rel="stylesheet">
     <title>Jumbler</title>
-    <script type="module" crossorigin src="./assets/index-1a638214.js"></script>
-    <link rel="stylesheet" href="./assets/index-f25906cf.css">
+    <script type="module" crossorigin src="/jumbler/assets/index-6eff79f2.js"></script>
+    <link rel="stylesheet" href="/jumbler/assets/index-ffc77ff6.css">
   </head>
-  <body class='min-h-screen max-h-screen'>
+  <body
+  class='min-h-screen max-h-screen font-f1 text-md'
+  x-data="{
+    menu:true,
+  }"
+  >
 
-    <div class="flex flex-row justify-center items-center border-b border-black">
-      <div class="flex w-full max-w-7xl h-full flex-row justify-center mx-auto sm:px-6 lg:px-8" style="height:calc(var(--vh) * 7.5)">
-        <button class="flex justify-center items-center mx-4 active:scale-95" type="original" id="originalButton">
-          <img class="w-3/4 h-3/4" id="originalImg" src="./eye.svg">
-        </button>
-        <button class="flex justify-center items-center w-24 cursor-auto">
-          <div class="w-3/4 h-3/4 flex justify-center items-center" id="completed">-</div>
-        </button>
-        <button class="flex justify-center items-center mx-4 active:scale-95" id="jumbleButton">
-          <img class="w-3/4 h-3/4" src="./dice.svg">
-        </button>
-        <button class="flex justify-center items-center mx-4 active:scale-95" id="settingsButton">
-          <img class="w-3/4 h-3/4" src="./options.svg">
-        </button>
-      </div>
-    </div>
-  
-    <div id="settingsMenu" class="fixed bg-white z-10 flex w-full flex-col justify-start items-center justify-items-start	mx-auto overflow-y-auto" style="height:calc(var(--vh) * 85)">
+  <div class='bg-mod_dark text-mod_light' hidden></div>
 
-      <label for="rows" class="flex justify-center items-center m-4 text-center">Rows:</label>
-      <input class="flex justify-center items-center m-4 border border-black rounded-lg p-2 text-center" type="number" min="1" step="1" id="rows" name="rows" value="3" placeholder="R">
-  
-      <label for="columns" class="flex justify-center items-center mx-4 text-center">Columns:</label>
-      <input class="flex justify-center items-center m-4 border border-black rounded-lg p-2 text-center" type="number" min="1" step="1" id="columns" name="columns" value="3" placeholder="C">
-  
-      <label for="uploadedFiles" class="flex justify-center items-center mx-4 text-center">Currently Selected:</label>
-      <select class="flex justify-center items-center rounded-lg m-4 border border-black rounded-lg p-2 active:scale-95" id="uploadedFiles" style="min-width: 200px; max-width:250px"></select>
-  
-      <label for="loadSelected" class="flex justify-center items-center m-4 text-center">Load Selected:</label>
-      <button id="loadSelected" class="flex justify-center items-center m-4 p-4 rounded-lg border border-black active:scale-95"><img class="w-3/4 h-3/4" src="./chevronRight.svg"></button>
-      
-      <label for="triggerSelectFileButton" class="flex justify-center items-center m-4 text-center">Upload Images:</label>
-      <button class="flex justify-center items-center m-4 p-4 rounded-lg border border-black active:scale-95" id="triggerSelectFileButton"><img class="w-3/4 h-3/4" src="./chevronUp.svg"></button>
-      
-    </div>
-  
-    <div class="fixed w-full overflow-auto" id="pContents" style="height:calc(var(--vh) * 85)">
-      <div class="flex justify-center items-center w-full" id="jumbleDiv">
-        <canvas id="ctx" class="my-2"></canvas>
+    <nav
+    id="NAV"
+    class="z-30 absolute bg-mod_light text-mod_dark top-[6px] left-1/2 transform -translate-x-1/2 flex flex-col justify-start items-center shadow-lg w-full max-w-xl rounded-lg">
+
+      <div
+      class="flex flex-row justify-around items-center w-full h-12"
+      >
+
+        <button
+        id="ORIGINAL"
+        class="flex justify-center items-center active:scale-95 hover:scale-105"
+        ></button>
+
+        <div
+        id="COMPLETED"
+        class="flex justify-center items-center cursor-auto mx-2"
+        ></div>
+
+        <button
+        id="JUMBLE"
+        class="flex justify-center items-center active:scale-95 hover:scale-105"
+        ></button>
+
+        <button
+        id="SCALE_DOWN"
+        class="flex justify-center items-center active:scale-95 hover:scale-105 text-3xl"
+        >-</button>
+
+        <button
+        id="SCALE_UP"
+        class="flex justify-center items-center active:scale-95 hover:scale-105 text-3xl"
+        >+</button>
+
+        <button
+        id="DOWN"
+        class="flex justify-center items-center active:scale-95 hover:scale-105"
+        x-show="!menu"
+        x-on:click="menu=!menu"
+        ></button>
+        
+        <button
+        id="UP"
+        class="flex justify-center items-center active:scale-95 hover:scale-105"
+        style="display:none;"
+        x-show="menu"
+        x-on:click="menu=!menu"
+        ></button>
+
       </div>
-  
-      <div class="w-full" style="height:calc(var(--vh) * 2.5)">
-  
+
+      <div
+      x-show="menu"
+      id="MENU"
+      class="relative rounded-lg bg-mod_light text-mod_dark mt-4 max-h-[500px] overflow-hidden overflow-y-auto py-4 flex flex-col justify-start items-center w-full">
+
+        <div class='flex flex-row justify-between items-center w-[250px]'>
+          <label class='m-2' for="ROWS">rows</label>
+          <input type="number" class="text-center m-2 bg-mod_light text-mod_dark rounded-lg w-20" id="ROWS" min="1" step="1" value="4">
+        </div>
+
+        <div class='flex flex-row justify-between items-center w-[250px]'>
+          <label class='m-2' for="COLUMNS">columns</label>
+          <input type="number" class="text-center m-2 bg-mod_light text-mod_dark rounded-lg w-20" id="COLUMNS" min="1" step="1" value="4">
+        </div>
+
+        <div class='flex flex-row justify-between items-center w-[250px]'>
+          <label class='m-2' for="THEME">theme</label>
+          <button
+          id="THEME"
+          class="flex justify-center items-center m-2 active:scale-95 hover:scale-105 w-20"
+          ></button>
+        </div>
+
+        <div class='flex flex-col justify-start items-center my-2'>
+
+          <label for="UPLOADED" class="flex justify-center items-center mx-4 text-center">current</label>
+          <select class="flex justify-center items-center rounded-lg m-4 border border-black rounded-lg p-2 active:scale-95" id="UPLOADED" style="min-width: 200px; max-width:250px"></select>    
+          <button
+          id="PLAY"
+          class="m-2 p-2 active:scale-95 bg-mod_dark text-mod_light rounded-lg hover:bg-mod_dark_light flex justify-center items-center border border-mod_light"
+          >play</button>
+
+          <label class='m-2' for="LOAD">import</label>
+
+          <div
+          class='flex flex-row justify-center items-center'>
+            <input
+            hidden
+            id="IMPORT"
+            type="file"
+            multiple />
+            <button
+            id="SELECT"
+            class="m-2 p-2 active:scale-95 bg-mod_dark text-mod_light rounded-lg hover:bg-mod_dark_light flex justify-center items-center border border-mod_light"
+            >select</button>
+            <button
+            id="LOAD"
+            class="m-2 p-2 active:scale-95 bg-mod_dark text-mod_light rounded-lg hover:bg-mod_dark_light flex justify-center items-center border border-mod_light"
+            >load</button>
+          </div>
+
+        </div>
+
+      </div>
+
+    </nav>
+
+    <div class="absolute w-full overflow-auto top-[60px]">
+      <div class="relative flex justify-center items-center w-full">
+        <canvas id="CANVAS"></canvas>
       </div>
     </div>
-  
-    <input hidden type="file" name="fileupload" value="fileupload" id="fileupload" accept="image/*" multiple>
 
   </body>
   
