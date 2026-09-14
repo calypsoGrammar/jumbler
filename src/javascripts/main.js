@@ -2,7 +2,7 @@
 
 import svg from './svg.js';
 import Alpine from 'alpinejs';
-import { canvasPointFromClient, tileIndexFromPoint } from './puzzle-coordinates.js';
+import { canvasPointFromClient, PointerSwapSession } from './puzzle-coordinates.js';
 
 window.Alpine = Alpine;
 Alpine.start();
@@ -84,8 +84,7 @@ class Jumbler
     this.tW = 0;
     this.tH = 0;
     this.total = 0;
-    this.firstP = null;
-    this.activePointerId = null;
+    this.pointerSession = new PointerSwapSession();
 
     this.scale = 0.6;
     this.original = [];
@@ -385,61 +384,39 @@ class Jumbler
     }
   }
 
-  pointer_down(x, y)
+  puzzleState()
   {
-    this.firstP = null;
+    return {
+      canvasWidth: CANVAS.width,
+      canvasHeight: CANVAS.height,
+      tilesAcross: Number(this.stored_rows),
+      tilesDown: Number(this.stored_columns),
+      fragments: this.fragments,
+    };
+  }
+
+  pointer_down(pointerId, point)
+  {
     if(this.show_original === true) return false;
-
-    const index = tileIndexFromPoint(
-      x,
-      y,
-      CANVAS.width,
-      CANVAS.height,
-      Number(this.stored_rows),
-      Number(this.stored_columns),
-    );
-
-    if(index === null || !this.fragments[index]) return false;
-    this.firstP = index;
-    return true;
+    return this.pointerSession.begin(pointerId, point, this.puzzleState());
   }
 
-  pointer_up(x, y)
+  pointer_up(pointerId, point)
   {
-    if(this.show_original === true)
+    if(this.show_original === true) return this.pointerSession.cancel(pointerId);
+
+    const result = this.pointerSession.finish(pointerId, point, this.puzzleState());
+    if(result.valid)
     {
-      this.firstP = null;
-      return;
+      this.draw();
+      this.complete();
     }
-
-    const secondP = tileIndexFromPoint(
-      x,
-      y,
-      CANVAS.width,
-      CANVAS.height,
-      Number(this.stored_rows),
-      Number(this.stored_columns),
-    );
-    const firstFragment = this.firstP === null ? null : this.fragments[this.firstP];
-    const secondFragment = secondP === null ? null : this.fragments[secondP];
-
-    this.firstP = null;
-    if(!firstFragment || !secondFragment) return;
-
-    if(firstFragment !== secondFragment)
-    {
-      const firstImage = firstFragment.frag;
-      firstFragment.frag = secondFragment.frag;
-      secondFragment.frag = firstImage;
-    }
-
-    this.draw();
-    this.complete();
+    return result.handled;
   }
 
-  pointer_cancel()
+  pointer_cancel(pointerId)
   {
-    this.firstP = null;
+    return this.pointerSession.cancel(pointerId);
   }
 }
 
@@ -457,12 +434,9 @@ function canvasPointForPointer(event)
 CANVAS.addEventListener('pointerdown', function(event)
 {
   event.preventDefault();
-  if(window.jumbler.activePointerId !== null) return;
-
   const point = canvasPointForPointer(event);
-  if(point && window.jumbler.pointer_down(point.x, point.y))
+  if(window.jumbler.pointer_down(event.pointerId, point))
   {
-    window.jumbler.activePointerId = event.pointerId;
     CANVAS.setPointerCapture(event.pointerId);
   }
 });
@@ -470,28 +444,20 @@ CANVAS.addEventListener('pointerdown', function(event)
 CANVAS.addEventListener('pointerup', function(event)
 {
   event.preventDefault();
-  if(event.pointerId !== window.jumbler.activePointerId) return;
-
   const point = canvasPointForPointer(event);
-  if(point) window.jumbler.pointer_up(point.x, point.y);
-  else window.jumbler.pointer_cancel();
+  if(!window.jumbler.pointer_up(event.pointerId, point)) return;
 
-  window.jumbler.activePointerId = null;
   if(CANVAS.hasPointerCapture(event.pointerId)) CANVAS.releasePointerCapture(event.pointerId);
 });
 
 CANVAS.addEventListener('pointercancel', function(event)
 {
-  if(event.pointerId !== window.jumbler.activePointerId) return;
-  window.jumbler.pointer_cancel();
-  window.jumbler.activePointerId = null;
+  window.jumbler.pointer_cancel(event.pointerId);
 });
 
 CANVAS.addEventListener('lostpointercapture', function(event)
 {
-  if(event.pointerId !== window.jumbler.activePointerId) return;
-  window.jumbler.pointer_cancel();
-  window.jumbler.activePointerId = null;
+  window.jumbler.pointer_cancel(event.pointerId);
 });
 
 function start()
