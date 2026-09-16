@@ -3,6 +3,12 @@
 import svg from './svg.js';
 import Alpine from 'alpinejs';
 import { canvasPointFromClient, PointerSwapSession } from './puzzle-coordinates.js';
+import {
+  attemptPuzzleScale,
+  MAX_PUZZLE_SCALE,
+  MIN_PUZZLE_SCALE,
+  puzzleGeometry,
+} from './puzzle-scaling.js';
 
 window.Alpine = Alpine;
 Alpine.start();
@@ -16,6 +22,7 @@ const JUMBLE = document.getElementById("JUMBLE");
 
 const SCALE_DOWN = document.getElementById("SCALE_DOWN");
 const SCALE_UP = document.getElementById("SCALE_UP");
+const SCALE_VALUE = document.getElementById("SCALE_VALUE");
 
 const UP = document.getElementById("UP");
 const DOWN = document.getElementById("DOWN");
@@ -99,6 +106,7 @@ class Jumbler
     this.playing = false;
 
     this.current_img = new Image();
+    this.update_scale_controls();
   }
 
   toggle_dark()
@@ -187,85 +195,123 @@ class Jumbler
   reload()
   {
     if(this.uploaded_files.length == 0) return;
-    this.current_img.src = this.uploaded_files[UPLOADED.value].src;
-    this.stored_width = this.current_img.width;
-    this.stored_height = this.current_img.height;
-    this.init();
-    // this.dimensions();
-    this.draw();
+    const nextImage = this.uploaded_files[UPLOADED.value];
+    if(this.init(this.scale, nextImage))
+    {
+      this.playing = false;
+      this.pointerSession.clear();
+    }
   }
 
   scale_up()
   {
-    if(this.playing)
-    {
-      let confirm = window.confirm('rescaling the image will reset the game');
-      if(!confirm) return;
-    }
-    this.playing = false;
-    this.scale += 0.1;
-    this.scale = parseFloat(this.scale.toFixed(2));
-    this.init();
-    this.draw();
+    this.change_scale(1);
   }
 
   scale_down()
   {
-    if(this.playing)
-    {
-      let confirm = window.confirm('rescaling the image will reset the game');
-      if(!confirm) return;
-    }
-    this.playing = false;
-    this.scale -= 0.1;
-    this.scale = parseFloat(this.scale.toFixed(2));
-    this.init();
-    this.draw();
+    this.change_scale(-1);
   }
 
-  init()
+  change_scale(direction)
   {
-    CANVAS.width = (this.stored_width * this.scale);
-    CANVAS.height = (this.stored_height * this.scale);
+    const result = attemptPuzzleScale(this.scale, direction, candidate => {
+      if(this.playing && !window.confirm('rescaling the image will reset the game')) return false;
+      return this.init(candidate, this.current_img);
+    });
 
-    this.stored_rows = ROWS.value;
-    this.stored_columns = COLUMNS.value;
-
-    c.drawImage(this.current_img, 0, 0, CANVAS.width, CANVAS.height);
-
-    this.tW = CANVAS.width / this.stored_rows;
-    this.tH = CANVAS.height / this.stored_columns;
-
-    this.total = this.stored_rows * this.stored_columns;
-
-    this.fragments.length = 0;
-    this.original.length = 0;
-
-    for(let i = 0; i < this.stored_rows; i++)
+    if(result.applied)
     {
-      for(let p = 0; p < this.stored_columns; p++)
+      this.scale = result.scale;
+      this.playing = false;
+      this.pointerSession.clear();
+    }
+    this.update_scale_controls();
+    return result.applied;
+  }
+
+  update_scale_controls()
+  {
+    SCALE_DOWN.disabled = this.scale <= MIN_PUZZLE_SCALE;
+    SCALE_UP.disabled = this.scale >= MAX_PUZZLE_SCALE;
+    SCALE_VALUE.textContent = Math.round(this.scale * 100).toString() + "%";
+  }
+
+  init(targetScale = this.scale, image = this.current_img)
+  {
+    const rows = Number(ROWS.value);
+    const columns = Number(COLUMNS.value);
+    const width = Number(image && image.width);
+    const height = Number(image && image.height);
+    const geometry = puzzleGeometry(width, height, rows, columns, targetScale);
+    if(geometry === null) return false;
+
+    const stagingCanvas = document.createElement('canvas');
+    stagingCanvas.width = geometry.canvasWidth;
+    stagingCanvas.height = geometry.canvasHeight;
+    const stagingContext = stagingCanvas.getContext('2d');
+    if(stagingContext === null) return false;
+
+    const nextFragments = [];
+    const nextOriginal = [];
+
+    try
+    {
+      stagingContext.drawImage(image, 0, 0, geometry.canvasWidth, geometry.canvasHeight);
+      for(let i = 0; i < rows; i++)
       {
-        let img_data = c.getImageData(i * this.tW, p * this.tH, this.tW, this.tH);
-
-        let f = new Fragment(
-          this.fragments.length,
-          i,
-          p,
-          img_data,
-        );
-
-        this.fragments.push(f);
-
-        let f1 = new Fragment(
-          this.fragments.length,
-          i,
-          p,
-          img_data,
-        );
-
-        this.original.push(f1);
+        for(let p = 0; p < columns; p++)
+        {
+          const imgData = stagingContext.getImageData(
+            i * geometry.tileWidth,
+            p * geometry.tileHeight,
+            geometry.tileWidth,
+            geometry.tileHeight,
+          );
+          nextFragments.push(new Fragment(nextFragments.length, i, p, imgData));
+          nextOriginal.push(new Fragment(nextOriginal.length, i, p, imgData));
+        }
       }
     }
+    catch(error)
+    {
+      console.warn('Unable to resize puzzle canvas.', error);
+      return false;
+    }
+
+    const previousWidth = CANVAS.width;
+    const previousHeight = CANVAS.height;
+    try
+    {
+      CANVAS.width = geometry.canvasWidth;
+      CANVAS.height = geometry.canvasHeight;
+      for(const fragment of nextOriginal)
+      {
+        c.putImageData(fragment.frag, fragment.row * geometry.tileWidth, fragment.column * geometry.tileHeight);
+      }
+    }
+    catch(error)
+    {
+      CANVAS.width = previousWidth;
+      CANVAS.height = previousHeight;
+      this.draw();
+      console.warn('Unable to commit resized puzzle canvas.', error);
+      return false;
+    }
+
+    this.current_img = image;
+    this.stored_width = width;
+    this.stored_height = height;
+    this.stored_rows = rows;
+    this.stored_columns = columns;
+    this.tW = geometry.tileWidth;
+    this.tH = geometry.tileHeight;
+    this.total = geometry.total;
+    this.fragments = nextFragments;
+    this.original = nextOriginal;
+    this.show_original = true;
+    ORIGINAL.style.transform = 'rotate(90deg)';
+    return true;
   }
 
   // dimensions()

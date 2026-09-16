@@ -44,12 +44,16 @@
 
         <button
         id="SCALE_DOWN"
-        class="flex justify-center items-center active:scale-95 hover:scale-105 text-3xl"
+        aria-label="Decrease puzzle scale"
+        class="flex justify-center items-center active:scale-95 hover:scale-105 disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:scale-100 text-3xl"
         >-</button>
+
+        <output id="SCALE_VALUE" aria-label="Current puzzle scale" class="w-12 text-center">60%</output>
 
         <button
         id="SCALE_UP"
-        class="flex justify-center items-center active:scale-95 hover:scale-105 text-3xl"
+        aria-label="Increase puzzle scale"
+        class="flex justify-center items-center active:scale-95 hover:scale-105 disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:scale-100 text-3xl"
         >+</button>
 
         <button
