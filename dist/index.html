@@ -9,8 +9,8 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Unkempt:wght@400;700&display=swap" rel="stylesheet">
     <title>Jumbler</title>
-    <script type="module" crossorigin src="/jumbler/assets/index-6eff79f2.js"></script>
-    <link rel="stylesheet" href="/jumbler/assets/index-ffc77ff6.css">
+    <script type="module" crossorigin src="/jumbler/assets/index-7f214a30.js"></script>
+    <link rel="stylesheet" href="/jumbler/assets/index-a1fa34e3.css">
   </head>
   <body
   class='min-h-screen max-h-screen font-f1 text-md'
@@ -46,12 +46,16 @@
 
         <button
         id="SCALE_DOWN"
-        class="flex justify-center items-center active:scale-95 hover:scale-105 text-3xl"
+        aria-label="Decrease puzzle scale"
+        class="flex justify-center items-center active:scale-95 hover:scale-105 disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:scale-100 text-3xl"
         >-</button>
+
+        <output id="SCALE_VALUE" aria-label="Current puzzle scale" class="w-12 text-center">60%</output>
 
         <button
         id="SCALE_UP"
-        class="flex justify-center items-center active:scale-95 hover:scale-105 text-3xl"
+        aria-label="Increase puzzle scale"
+        class="flex justify-center items-center active:scale-95 hover:scale-105 disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:scale-100 text-3xl"
         >+</button>
 
         <button
@@ -78,12 +82,12 @@
 
         <div class='flex flex-row justify-between items-center w-[250px]'>
           <label class='m-2' for="ROWS">rows</label>
-          <input type="number" class="text-center m-2 bg-mod_light text-mod_dark rounded-lg w-20" id="ROWS" min="1" step="1" value="4">
+          <input type="number" class="text-center m-2 bg-mod_light text-mod_dark rounded-lg w-20" id="ROWS" min="1" max="64" step="1" value="4">
         </div>
 
         <div class='flex flex-row justify-between items-center w-[250px]'>
           <label class='m-2' for="COLUMNS">columns</label>
-          <input type="number" class="text-center m-2 bg-mod_light text-mod_dark rounded-lg w-20" id="COLUMNS" min="1" step="1" value="4">
+          <input type="number" class="text-center m-2 bg-mod_light text-mod_dark rounded-lg w-20" id="COLUMNS" min="1" max="64" step="1" value="4">
         </div>
 
         <div class='flex flex-row justify-between items-center w-[250px]'>

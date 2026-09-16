@@ -3,6 +3,12 @@
 import svg from './svg.js';
 import Alpine from 'alpinejs';
 import { canvasPointFromClient, PointerSwapSession } from './puzzle-coordinates.js';
+import {
+  applyPuzzleResize,
+  attemptPuzzleScale,
+  drawPuzzleFragments,
+  puzzleScaleControlState,
+} from './puzzle-scaling.js';
 
 window.Alpine = Alpine;
 Alpine.start();
@@ -16,6 +22,7 @@ const JUMBLE = document.getElementById("JUMBLE");
 
 const SCALE_DOWN = document.getElementById("SCALE_DOWN");
 const SCALE_UP = document.getElementById("SCALE_UP");
+const SCALE_VALUE = document.getElementById("SCALE_VALUE");
 
 const UP = document.getElementById("UP");
 const DOWN = document.getElementById("DOWN");
@@ -53,22 +60,6 @@ PLAY.onclick = function(){ window.jumbler.reload() };
 SELECT.onclick = function(){ IMPORT.click() };
 LOAD.onclick = function(){ window.jumbler.import() };
 
-class Fragment
-{
-  constructor(
-    index,
-    row,
-    column,
-    img_data,
-  )
-  {
-    this.index = index;
-    this.row = row;
-    this.column = column;
-    this.frag = img_data;
-  }
-}
-
 class Jumbler
 {
   constructor(
@@ -99,6 +90,7 @@ class Jumbler
     this.playing = false;
 
     this.current_img = new Image();
+    this.update_scale_controls();
   }
 
   toggle_dark()
@@ -187,85 +179,67 @@ class Jumbler
   reload()
   {
     if(this.uploaded_files.length == 0) return;
-    this.current_img.src = this.uploaded_files[UPLOADED.value].src;
-    this.stored_width = this.current_img.width;
-    this.stored_height = this.current_img.height;
-    this.init();
-    // this.dimensions();
-    this.draw();
+    const nextImage = this.uploaded_files[UPLOADED.value];
+    if(this.init(this.scale, nextImage))
+    {
+      this.playing = false;
+      this.pointerSession.clear();
+    }
   }
 
   scale_up()
   {
-    if(this.playing)
-    {
-      let confirm = window.confirm('rescaling the image will reset the game');
-      if(!confirm) return;
-    }
-    this.playing = false;
-    this.scale += 0.1;
-    this.scale = parseFloat(this.scale.toFixed(2));
-    this.init();
-    this.draw();
+    this.change_scale(1);
   }
 
   scale_down()
   {
-    if(this.playing)
-    {
-      let confirm = window.confirm('rescaling the image will reset the game');
-      if(!confirm) return;
-    }
-    this.playing = false;
-    this.scale -= 0.1;
-    this.scale = parseFloat(this.scale.toFixed(2));
-    this.init();
-    this.draw();
+    this.change_scale(-1);
   }
 
-  init()
+  change_scale(direction)
   {
-    CANVAS.width = (this.stored_width * this.scale);
-    CANVAS.height = (this.stored_height * this.scale);
+    const result = attemptPuzzleScale(this.scale, direction, candidate => {
+      if(this.playing && !window.confirm('rescaling the image will reset the game')) return false;
+      return this.init(candidate, this.current_img);
+    });
 
-    this.stored_rows = ROWS.value;
-    this.stored_columns = COLUMNS.value;
-
-    c.drawImage(this.current_img, 0, 0, CANVAS.width, CANVAS.height);
-
-    this.tW = CANVAS.width / this.stored_rows;
-    this.tH = CANVAS.height / this.stored_columns;
-
-    this.total = this.stored_rows * this.stored_columns;
-
-    this.fragments.length = 0;
-    this.original.length = 0;
-
-    for(let i = 0; i < this.stored_rows; i++)
+    if(result.applied)
     {
-      for(let p = 0; p < this.stored_columns; p++)
-      {
-        let img_data = c.getImageData(i * this.tW, p * this.tH, this.tW, this.tH);
-
-        let f = new Fragment(
-          this.fragments.length,
-          i,
-          p,
-          img_data,
-        );
-
-        this.fragments.push(f);
-
-        let f1 = new Fragment(
-          this.fragments.length,
-          i,
-          p,
-          img_data,
-        );
-
-        this.original.push(f1);
-      }
+      this.scale = result.scale;
+      this.playing = false;
+      this.pointerSession.clear();
     }
+    this.update_scale_controls();
+    return result.applied;
+  }
+
+  update_scale_controls()
+  {
+    const controls = puzzleScaleControlState(this.scale);
+    SCALE_DOWN.disabled = controls.scaleDownDisabled;
+    SCALE_UP.disabled = controls.scaleUpDisabled;
+    SCALE_VALUE.textContent = controls.label;
+  }
+
+  init(targetScale = this.scale, image = this.current_img)
+  {
+    const rows = Number(ROWS.value);
+    const columns = Number(COLUMNS.value);
+    const applied = applyPuzzleResize(this, {
+      canvas: CANVAS,
+      context: c,
+      createCanvas: () => document.createElement('canvas'),
+      image,
+      tilesAcross: rows,
+      tilesDown: columns,
+      scale: targetScale,
+    });
+    if(!applied) return false;
+
+    this.show_original = true;
+    ORIGINAL.style.transform = 'rotate(90deg)';
+    return true;
   }
 
   // dimensions()
@@ -310,17 +284,11 @@ class Jumbler
   {
     if(this.show_original === true)
     {
-      for(let i = 0; i < this.original.length; i++)
-      {
-        c.putImageData(this.original[i].frag, this.original[i].row * this.tW, this.original[i].column * this.tH);
-      }
+      drawPuzzleFragments(c, this.original);
     } 
     else
     {
-      for(let i = 0; i < this.fragments.length; i++)
-      {
-        c.putImageData(this.fragments[i].frag, this.fragments[i].row * this.tW, this.fragments[i].column * this.tH);
-      }
+      drawPuzzleFragments(c, this.fragments);
     }
   }
 
@@ -349,7 +317,7 @@ class Jumbler
     for(let i = 0; i < tempImg.length; i++)
     {
       this.fragments[i].frag = tempImg[i];
-      c.putImageData(this.fragments[i].frag, this.fragments[i].row * this.tW, this.fragments[i].column * this.tH);
+      c.putImageData(this.fragments[i].frag, this.fragments[i].x, this.fragments[i].y);
     }
     
     this.show_original = false;
