@@ -35,6 +35,21 @@ export function tileIndexFromPoint(x, y, canvasWidth, canvasHeight, tilesAcross,
   return index >= 0 && index < total ? index : null;
 }
 
+function fragmentIndexFromPoint(point, fragments)
+{
+  const index = fragments.findIndex(fragment => (
+    Number.isInteger(fragment.x)
+      && Number.isInteger(fragment.y)
+      && Number.isInteger(fragment.width)
+      && Number.isInteger(fragment.height)
+      && point.x >= fragment.x
+      && point.x < fragment.x + fragment.width
+      && point.y >= fragment.y
+      && point.y < fragment.y + fragment.height
+  ));
+  return index === -1 ? null : index;
+}
+
 export class PointerSwapSession
 {
   constructor()
@@ -82,6 +97,9 @@ export class PointerSwapSession
 
   indexForPoint(point, puzzle)
   {
+    const fragmentIndex = fragmentIndexFromPoint(point, puzzle.fragments);
+    if(fragmentIndex !== null) return fragmentIndex;
+
     return tileIndexFromPoint(
       point.x,
       point.y,

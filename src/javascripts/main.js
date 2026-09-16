@@ -5,9 +5,9 @@ import Alpine from 'alpinejs';
 import { canvasPointFromClient, PointerSwapSession } from './puzzle-coordinates.js';
 import {
   attemptPuzzleScale,
-  MAX_PUZZLE_SCALE,
-  MIN_PUZZLE_SCALE,
-  puzzleGeometry,
+  drawPuzzleFragments,
+  puzzleScaleControlState,
+  resizePuzzle,
 } from './puzzle-scaling.js';
 
 window.Alpine = Alpine;
@@ -59,22 +59,6 @@ THEME.onclick = function(){ window.jumbler.toggle_dark() };
 PLAY.onclick = function(){ window.jumbler.reload() };
 SELECT.onclick = function(){ IMPORT.click() };
 LOAD.onclick = function(){ window.jumbler.import() };
-
-class Fragment
-{
-  constructor(
-    index,
-    row,
-    column,
-    img_data,
-  )
-  {
-    this.index = index;
-    this.row = row;
-    this.column = column;
-    this.frag = img_data;
-  }
-}
 
 class Jumbler
 {
@@ -232,82 +216,37 @@ class Jumbler
 
   update_scale_controls()
   {
-    SCALE_DOWN.disabled = this.scale <= MIN_PUZZLE_SCALE;
-    SCALE_UP.disabled = this.scale >= MAX_PUZZLE_SCALE;
-    SCALE_VALUE.textContent = Math.round(this.scale * 100).toString() + "%";
+    const controls = puzzleScaleControlState(this.scale);
+    SCALE_DOWN.disabled = controls.scaleDownDisabled;
+    SCALE_UP.disabled = controls.scaleUpDisabled;
+    SCALE_VALUE.textContent = controls.label;
   }
 
   init(targetScale = this.scale, image = this.current_img)
   {
     const rows = Number(ROWS.value);
     const columns = Number(COLUMNS.value);
-    const width = Number(image && image.width);
-    const height = Number(image && image.height);
-    const geometry = puzzleGeometry(width, height, rows, columns, targetScale);
-    if(geometry === null) return false;
+    const resized = resizePuzzle({
+      canvas: CANVAS,
+      context: c,
+      createCanvas: () => document.createElement('canvas'),
+      image,
+      tilesAcross: rows,
+      tilesDown: columns,
+      scale: targetScale,
+      redraw: () => this.draw(),
+    });
+    if(resized === null) return false;
 
-    const stagingCanvas = document.createElement('canvas');
-    stagingCanvas.width = geometry.canvasWidth;
-    stagingCanvas.height = geometry.canvasHeight;
-    const stagingContext = stagingCanvas.getContext('2d');
-    if(stagingContext === null) return false;
-
-    const nextFragments = [];
-    const nextOriginal = [];
-
-    try
-    {
-      stagingContext.drawImage(image, 0, 0, geometry.canvasWidth, geometry.canvasHeight);
-      for(let i = 0; i < rows; i++)
-      {
-        for(let p = 0; p < columns; p++)
-        {
-          const imgData = stagingContext.getImageData(
-            i * geometry.tileWidth,
-            p * geometry.tileHeight,
-            geometry.tileWidth,
-            geometry.tileHeight,
-          );
-          nextFragments.push(new Fragment(nextFragments.length, i, p, imgData));
-          nextOriginal.push(new Fragment(nextOriginal.length, i, p, imgData));
-        }
-      }
-    }
-    catch(error)
-    {
-      console.warn('Unable to resize puzzle canvas.', error);
-      return false;
-    }
-
-    const previousWidth = CANVAS.width;
-    const previousHeight = CANVAS.height;
-    try
-    {
-      CANVAS.width = geometry.canvasWidth;
-      CANVAS.height = geometry.canvasHeight;
-      for(const fragment of nextOriginal)
-      {
-        c.putImageData(fragment.frag, fragment.row * geometry.tileWidth, fragment.column * geometry.tileHeight);
-      }
-    }
-    catch(error)
-    {
-      CANVAS.width = previousWidth;
-      CANVAS.height = previousHeight;
-      this.draw();
-      console.warn('Unable to commit resized puzzle canvas.', error);
-      return false;
-    }
+    const nextOriginal = resized.fragments.map(fragment => ({ ...fragment }));
 
     this.current_img = image;
-    this.stored_width = width;
-    this.stored_height = height;
+    this.stored_width = resized.width;
+    this.stored_height = resized.height;
     this.stored_rows = rows;
     this.stored_columns = columns;
-    this.tW = geometry.tileWidth;
-    this.tH = geometry.tileHeight;
-    this.total = geometry.total;
-    this.fragments = nextFragments;
+    this.total = resized.geometry.total;
+    this.fragments = resized.fragments;
     this.original = nextOriginal;
     this.show_original = true;
     ORIGINAL.style.transform = 'rotate(90deg)';
@@ -356,17 +295,11 @@ class Jumbler
   {
     if(this.show_original === true)
     {
-      for(let i = 0; i < this.original.length; i++)
-      {
-        c.putImageData(this.original[i].frag, this.original[i].row * this.tW, this.original[i].column * this.tH);
-      }
+      drawPuzzleFragments(c, this.original);
     } 
     else
     {
-      for(let i = 0; i < this.fragments.length; i++)
-      {
-        c.putImageData(this.fragments[i].frag, this.fragments[i].row * this.tW, this.fragments[i].column * this.tH);
-      }
+      drawPuzzleFragments(c, this.fragments);
     }
   }
 
@@ -395,7 +328,7 @@ class Jumbler
     for(let i = 0; i < tempImg.length; i++)
     {
       this.fragments[i].frag = tempImg[i];
-      c.putImageData(this.fragments[i].frag, this.fragments[i].row * this.tW, this.fragments[i].column * this.tH);
+      c.putImageData(this.fragments[i].frag, this.fragments[i].x, this.fragments[i].y);
     }
     
     this.show_original = false;
