@@ -1,8 +1,10 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
+import { access, readFile } from 'node:fs/promises';
 
 import { PointerSwapSession } from '../src/javascripts/puzzle-coordinates.js';
 import {
+  applyPuzzleResize,
   attemptPuzzleScale,
   MAX_CANVAS_DIMENSION,
   MAX_CANVAS_PIXELS,
@@ -15,27 +17,80 @@ import {
   resizePuzzle,
 } from '../src/javascripts/puzzle-scaling.js';
 
-function canvasHarness({ failReadAt = null, failWriteAt = null } = {})
+function canvasHarness({ failReadAt = null, failSnapshot = false, failCommit = false, failRestore = false } = {})
 {
   const reads = [];
-  const writes = [];
-  let redraws = 0;
-  const canvas = { width: 320, height: 240 };
-  const context = {
-    putImageData(image, x, y)
+  const visibleDraws = [];
+  let visiblePixels = ['previous-left', 'previous-right'];
+  let visibleWidth = 320;
+  let visibleHeight = 240;
+  let visibleDrawAttempts = 0;
+  let canvasCreations = 0;
+
+  function memoryCanvas(width = 0, height = 0, pixels = [])
+  {
+    let canvasWidth = width;
+    let canvasHeight = height;
+    const canvas = {
+      pixels: structuredClone(pixels),
+      get width() { return canvasWidth; },
+      set width(value)
+      {
+        canvasWidth = value;
+        canvas.pixels = [];
+      },
+      get height() { return canvasHeight; },
+      set height(value)
+      {
+        canvasHeight = value;
+        canvas.pixels = [];
+      },
+      getContext()
+      {
+        return {
+          drawImage(source)
+          {
+            canvas.pixels = structuredClone(source.pixels || ['source-image']);
+          },
+          getImageData(x, y, tileWidth, tileHeight)
+          {
+            if(reads.length === failReadAt) throw new Error('read failed');
+            const image = { x, y, width: tileWidth, height: tileHeight, id: reads.length };
+            reads.push(image);
+            return image;
+          },
+        };
+      },
+    };
+    return canvas;
+  }
+
+  const canvas = {
+    pixels: visiblePixels,
+    get width() { return visibleWidth; },
+    set width(value)
     {
-      if(writes.length === failWriteAt) throw new Error('commit failed');
-      writes.push({ image, x, y });
+      visibleWidth = value;
+      visiblePixels = [];
+      canvas.pixels = visiblePixels;
+    },
+    get height() { return visibleHeight; },
+    set height(value)
+    {
+      visibleHeight = value;
+      visiblePixels = [];
+      canvas.pixels = visiblePixels;
     },
   };
-  const stagingContext = {
-    drawImage() {},
-    getImageData(x, y, width, height)
+  const context = {
+    drawImage(source)
     {
-      if(reads.length === failReadAt) throw new Error('read failed');
-      const image = { x, y, width, height, id: reads.length };
-      reads.push(image);
-      return image;
+      visibleDrawAttempts++;
+      if(failCommit && visibleDrawAttempts === 1) throw new Error('commit failed');
+      if(failRestore && visibleDrawAttempts === 2) throw new Error('restore failed');
+      visiblePixels = structuredClone(source.pixels);
+      canvas.pixels = visiblePixels;
+      visibleDraws.push(structuredClone(visiblePixels));
     },
   };
 
@@ -43,21 +98,28 @@ function canvasHarness({ failReadAt = null, failWriteAt = null } = {})
     canvas,
     context,
     reads,
-    writes,
-    get redraws() { return redraws; },
-    resize(image, tilesAcross, tilesDown, scale)
+    visibleDraws,
+    get pixels() { return visiblePixels; },
+    options(image, tilesAcross, tilesDown, scale)
     {
-      return resizePuzzle({
+      return {
         canvas,
         context,
-        createCanvas: () => ({ getContext: () => stagingContext }),
+        createCanvas: () => {
+          canvasCreations++;
+          if(failSnapshot && canvasCreations === 2) throw new Error('snapshot failed');
+          return memoryCanvas();
+        },
         image,
         tilesAcross,
         tilesDown,
         scale,
-        redraw: () => { redraws++; },
         reportError: () => {},
-      });
+      };
+    },
+    resize(image, tilesAcross, tilesDown, scale)
+    {
+      return resizePuzzle(this.options(image, tilesAcross, tilesDown, scale));
     },
   };
 }
@@ -168,7 +230,7 @@ test('a non-divisible resize uses equal integer tiles and its produced tiles rem
     { width: 3, height: 3 },
   );
   assert.equal(harness.reads.reduce((area, tile) => area + tile.width * tile.height, 0), 9);
-  assert.deepEqual(harness.writes.map(({ x, y }) => ({ x, y })), resized.fragments.map(({ x, y }) => ({ x, y })));
+  assert.deepEqual(harness.pixels, ['source-image']);
 
   const session = new PointerSwapSession();
   const puzzle = {
@@ -186,22 +248,62 @@ test('a non-divisible resize uses equal integer tiles and its produced tiles rem
   assert.equal(resized.fragments[8].frag, firstImage);
 });
 
-test('staging and commit failures preserve the prior puzzle, scale, and visible dimensions', () => {
-  for(const failure of [{ failReadAt: 2 }, { failWriteAt: 2 }])
+test('staging, snapshot, and commit failures preserve the prior model and exact visible puzzle', () => {
+  for(const failure of [{ failReadAt: 2 }, { failSnapshot: true }, { failCommit: true }])
   {
     const harness = canvasHarness(failure);
-    const previousPuzzle = { id: 'unchanged', fragments: [{ frag: 'old' }] };
-    let puzzle = previousPuzzle;
+    const puzzle = {
+      current_img: { id: 'old-image' },
+      stored_width: 320,
+      stored_height: 240,
+      stored_rows: 2,
+      stored_columns: 1,
+      total: 2,
+      fragments: [{ frag: 'previous-left' }, { frag: 'previous-right' }],
+      original: [{ frag: 'original-left' }, { frag: 'original-right' }],
+    };
+    const previousPuzzle = structuredClone(puzzle);
+    const previousPixels = structuredClone(harness.pixels);
     const result = attemptPuzzleScale(0.6, 1, candidate => {
-      const resized = harness.resize({ width: 800, height: 600 }, 4, 3, candidate);
-      if(resized === null) return false;
-      puzzle = resized;
-      return true;
+      const image = { width: 800, height: 600, pixels: ['new-image'] };
+      return applyPuzzleResize(puzzle, harness.options(image, 4, 3, candidate));
     });
 
     assert.deepEqual(result, { scale: 0.6, applied: false });
-    assert.equal(puzzle, previousPuzzle);
-    assert.deepEqual(harness.canvas, { width: 320, height: 240 });
-    assert.equal(harness.redraws, failure.failWriteAt === 2 ? 1 : 0);
+    assert.deepEqual(puzzle, previousPuzzle);
+    assert.deepEqual(
+      { width: harness.canvas.width, height: harness.canvas.height, pixels: harness.pixels },
+      { width: 320, height: 240, pixels: previousPixels },
+    );
+    assert.deepEqual(harness.visibleDraws, failure.failCommit ? [previousPixels] : []);
   }
+});
+
+test('a failed canvas restoration is surfaced instead of being reported as preserved', () => {
+  const harness = canvasHarness({ failCommit: true, failRestore: true });
+
+  assert.throws(
+    () => harness.resize({ width: 800, height: 600, pixels: ['new-image'] }, 4, 3, 0.7),
+    error => error instanceof AggregateError && error.errors.length === 2,
+  );
+});
+
+test('documented safety limits stay synchronized with the enforced constants', async () => {
+  const readme = await readFile(new URL('../README.md', import.meta.url), 'utf8');
+
+  for(const limit of [MAX_CANVAS_DIMENSION, MAX_CANVAS_PIXELS, MAX_TILES_PER_AXIS, MAX_PUZZLE_TILES])
+  {
+    assert.match(readme, new RegExp(limit.toLocaleString('en-US')));
+  }
+});
+
+test('the production page references only committed local assets', async () => {
+  const productionPage = await readFile(new URL('../dist/index.html', import.meta.url), 'utf8');
+  const assetPaths = Array.from(
+    productionPage.matchAll(/(?:href|src)="\/jumbler\/(assets\/[^"?]+)"/g),
+    match => match[1],
+  );
+
+  assert.ok(assetPaths.length > 0);
+  await Promise.all(assetPaths.map(assetPath => access(new URL(`../dist/${assetPath}`, import.meta.url))));
 });

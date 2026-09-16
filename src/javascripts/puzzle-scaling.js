@@ -106,7 +106,6 @@ export function resizePuzzle({
   tilesAcross,
   tilesDown,
   scale,
-  redraw,
   reportError = (message, error) => console.warn(message, error),
 })
 {
@@ -168,30 +167,63 @@ export function resizePuzzle({
 
   const previousWidth = canvas.width;
   const previousHeight = canvas.height;
+  let previousCanvas;
+  try
+  {
+    previousCanvas = createCanvas();
+    previousCanvas.width = previousWidth;
+    previousCanvas.height = previousHeight;
+    const previousContext = previousCanvas.getContext('2d');
+    if(previousContext === null) return null;
+    previousContext.drawImage(canvas, 0, 0);
+  }
+  catch(error)
+  {
+    reportError('Unable to preserve the current puzzle canvas.', error);
+    return null;
+  }
+
   try
   {
     canvas.width = geometry.canvasWidth;
     canvas.height = geometry.canvasHeight;
-    drawPuzzleFragments(context, fragments);
+    context.drawImage(stagingCanvas, 0, 0);
   }
   catch(error)
   {
-    canvas.width = previousWidth;
-    canvas.height = previousHeight;
-    if(typeof redraw === 'function')
+    try
     {
-      try
-      {
-        redraw();
-      }
-      catch(redrawError)
-      {
-        reportError('Unable to restore puzzle canvas.', redrawError);
-      }
+      canvas.width = previousWidth;
+      canvas.height = previousHeight;
+      context.drawImage(previousCanvas, 0, 0);
+    }
+    catch(restoreError)
+    {
+      reportError('Unable to restore puzzle canvas.', restoreError);
+      throw new AggregateError(
+        [error, restoreError],
+        'Unable to commit or restore the puzzle canvas.',
+      );
     }
     reportError('Unable to commit resized puzzle canvas.', error);
     return null;
   }
 
   return { geometry, width, height, fragments };
+}
+
+export function applyPuzzleResize(puzzle, options)
+{
+  const resized = resizePuzzle(options);
+  if(resized === null) return false;
+
+  puzzle.current_img = options.image;
+  puzzle.stored_width = resized.width;
+  puzzle.stored_height = resized.height;
+  puzzle.stored_rows = options.tilesAcross;
+  puzzle.stored_columns = options.tilesDown;
+  puzzle.total = resized.geometry.total;
+  puzzle.fragments = resized.fragments;
+  puzzle.original = resized.fragments.map(fragment => ({ ...fragment }));
+  return true;
 }

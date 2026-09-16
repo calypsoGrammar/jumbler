@@ -4,10 +4,10 @@ import svg from './svg.js';
 import Alpine from 'alpinejs';
 import { canvasPointFromClient, PointerSwapSession } from './puzzle-coordinates.js';
 import {
+  applyPuzzleResize,
   attemptPuzzleScale,
   drawPuzzleFragments,
   puzzleScaleControlState,
-  resizePuzzle,
 } from './puzzle-scaling.js';
 
 window.Alpine = Alpine;
@@ -226,7 +226,7 @@ class Jumbler
   {
     const rows = Number(ROWS.value);
     const columns = Number(COLUMNS.value);
-    const resized = resizePuzzle({
+    const applied = applyPuzzleResize(this, {
       canvas: CANVAS,
       context: c,
       createCanvas: () => document.createElement('canvas'),
@@ -234,20 +234,9 @@ class Jumbler
       tilesAcross: rows,
       tilesDown: columns,
       scale: targetScale,
-      redraw: () => this.draw(),
     });
-    if(resized === null) return false;
+    if(!applied) return false;
 
-    const nextOriginal = resized.fragments.map(fragment => ({ ...fragment }));
-
-    this.current_img = image;
-    this.stored_width = resized.width;
-    this.stored_height = resized.height;
-    this.stored_rows = rows;
-    this.stored_columns = columns;
-    this.total = resized.geometry.total;
-    this.fragments = resized.fragments;
-    this.original = nextOriginal;
     this.show_original = true;
     ORIGINAL.style.transform = 'rotate(90deg)';
     return true;
