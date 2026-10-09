@@ -33,18 +33,10 @@ archon:
     # up-to-date branches and the repository allows auto-merge.
     policy: manual
   models:
+    # Profiles come from the service's shared model catalogue (archon-v3
+    # docs/operations.md, Models); a Model label on an issue picks another.
     default: sol
     fallback: opus
-    profiles:
-      sol:
-        adapter: codex
-        model: gpt-5.6-sol
-        reasoning: medium
-        linear_label: Sol
-      opus:
-        adapter: claude-code
-        model: claude-opus-5-5
-        linear_label: Claude Opus 5.5
 ---
 You are working on jumbler, Linear issue {{ issue.identifier }}: {{ issue.title }}.
 {% if attempt %}
