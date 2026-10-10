@@ -7,6 +7,7 @@ import {
   applyPuzzleResize,
   attemptPuzzleScale,
   drawPuzzleFragments,
+  puzzleCompletionPercent,
   puzzleScaleControlState,
 } from './puzzle-scaling.js';
 
@@ -231,8 +232,8 @@ class Jumbler
       context: c,
       createCanvas: () => document.createElement('canvas'),
       image,
-      tilesAcross: rows,
-      tilesDown: columns,
+      tilesAcross: columns,
+      tilesDown: rows,
       scale: targetScale,
     });
     if(!applied) return false;
@@ -242,53 +243,15 @@ class Jumbler
     return true;
   }
 
-  // dimensions()
-  // {
-  //   CANVAS.width = (this.stored_width * this.scale);
-  //   CANVAS.height = (this.stored_height * this.scale);
-
-  //   if(this.current_img === null) return;
-  //   if(CANVAS.width === 0) return;
-  //   if(CANVAS.height === 0) return;
-  //   if(c.width === 0) return;
-  //   if(c.height === 0) return;
-
-  //   c.drawImage(this.current_img, 0, 0, CANVAS.width, CANVAS.height);
-
-  //   this.tW = CANVAS.width / this.stored_rows;
-  //   this.tH = CANVAS.height / this.stored_columns;
-
-  //   let counter = 0;
-
-  //   for(let i = 0; i < this.stored_rows; i++)
-  //   {
-  //     for(let p = 0; p < this.stored_columns; p++)
-  //     {
-  //       let img_data = c.getImageData(i * this.tW, p * this.tH, this.tW, this.tH);
-  //       this.original[counter].frag = img_data;
-
-  //       for(let f = 0; f < this.fragments.length; f++)
-  //       {
-  //         if(this.fragments[f].frag === img_data)
-  //         {
-  //           this.fragments[f].frag = img_data;
-  //           break;
-  //         }
-  //       }
-  //       counter++;
-  //     }
-  //   }
-  // }
-
   draw()
   {
     if(this.show_original === true)
     {
-      drawPuzzleFragments(c, this.original);
+      drawPuzzleFragments(c, this.original, () => document.createElement('canvas'));
     } 
     else
     {
-      drawPuzzleFragments(c, this.fragments);
+      drawPuzzleFragments(c, this.fragments, () => document.createElement('canvas'));
     }
   }
 
@@ -305,25 +268,22 @@ class Jumbler
 
     for(let i = 0; i < this.total; i++) temp.push(i);
 
-    for(let i = 0; i < this.stored_rows; i++)
+    for(let i = 0; i < this.total; i++)
     {
-      for(let p = 0; p < this.stored_columns; p++)
-      {
-        let rndImg = Math.floor(Math.random() * temp.length);
-        tempImg.push(this.fragments[temp[rndImg]].frag);
-        temp.splice(rndImg, 1);
-      }
+      let rndImg = Math.floor(Math.random() * temp.length);
+      tempImg.push(this.fragments[temp[rndImg]].frag);
+      temp.splice(rndImg, 1);
     }
     for(let i = 0; i < tempImg.length; i++)
     {
       this.fragments[i].frag = tempImg[i];
-      c.putImageData(this.fragments[i].frag, this.fragments[i].x, this.fragments[i].y);
     }
     
     this.show_original = false;
     ORIGINAL.style.transform = '';
-    this.complete();
+    this.draw();
     this.playing = true;
+    this.complete();
   }
 
   is_original()
@@ -337,13 +297,7 @@ class Jumbler
 
   complete()
   {
-    let score = 0;
-    for(let i = 0; i < this.fragments.length; i++)
-    {
-      if(this.fragments[i].frag === this.original[i].frag) score++;
-    }
-    let percent = Math.floor(100 / this.fragments.length * score);
-    if(isNaN(percent)) percent = 0;
+    const percent = puzzleCompletionPercent(this.fragments, this.original);
     COMPLETED.innerHTML = percent.toString() + "%";
     if(percent === 100)
     {
@@ -357,8 +311,8 @@ class Jumbler
     return {
       canvasWidth: CANVAS.width,
       canvasHeight: CANVAS.height,
-      tilesAcross: Number(this.stored_rows),
-      tilesDown: Number(this.stored_columns),
+      tilesAcross: Number(this.stored_columns),
+      tilesDown: Number(this.stored_rows),
       fragments: this.fragments,
     };
   }

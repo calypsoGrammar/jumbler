@@ -49,16 +49,16 @@ test('tile mapping reaches all four canvas corners at desktop and mobile sizes',
   for(const { width, height } of viewports)
   {
     assert.equal(tileIndexFromPoint(0, 0, width, height, 4, 3), 0);
-    assert.equal(tileIndexFromPoint(width - 0.001, 0, width, height, 4, 3), 9);
-    assert.equal(tileIndexFromPoint(0, height - 0.001, width, height, 4, 3), 2);
+    assert.equal(tileIndexFromPoint(width - 0.001, 0, width, height, 4, 3), 3);
+    assert.equal(tileIndexFromPoint(0, height - 0.001, width, height, 4, 3), 8);
     assert.equal(tileIndexFromPoint(width - 0.001, height - 0.001, width, height, 4, 3), 11);
   }
 });
 
 test('tile mapping changes indexes at exact internal boundaries', () => {
   assert.equal(tileIndexFromPoint(199.999, 149.999, 800, 600, 4, 4), 0);
-  assert.equal(tileIndexFromPoint(200, 149.999, 800, 600, 4, 4), 4);
-  assert.equal(tileIndexFromPoint(199.999, 150, 800, 600, 4, 4), 1);
+  assert.equal(tileIndexFromPoint(200, 149.999, 800, 600, 4, 4), 1);
+  assert.equal(tileIndexFromPoint(199.999, 150, 800, 600, 4, 4), 4);
 });
 
 test('coordinates on or beyond every outside edge are rejected', () => {
@@ -109,8 +109,8 @@ test('pointer sequences swap fragments at all four canvas edges on desktop and m
       const edgeIndex = tileIndexFromPoint(edgePoint.x, edgePoint.y, width, height, 4, 3);
       const startIndex = edgeIndex === 5 ? 6 : 5;
       const startPoint = {
-        x: (Math.floor(startIndex / 3) + 0.5) * width / 4,
-        y: (startIndex % 3 + 0.5) * height / 3,
+        x: (startIndex % 4 + 0.5) * width / 4,
+        y: (Math.floor(startIndex / 4) + 0.5) * height / 3,
       };
 
       assert.equal(session.begin(1, startPoint, state), true);
