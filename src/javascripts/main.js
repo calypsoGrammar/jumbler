@@ -3,7 +3,7 @@
 import svg from './svg.js';
 import Alpine from 'alpinejs';
 import { canvasPointFromClient, PointerSwapSession } from './puzzle-coordinates.js';
-import { readDecodedImage, validateDecodedImage, validateGrid, validateImport } from './image-import.js';
+import { readDecodedImage, validateDecodedImage, validateGrid, validateImageBeforeDecode, validateImport } from './image-import.js';
 import {
   applyPuzzleResize,
   attemptPuzzleScale,
@@ -176,6 +176,8 @@ class Jumbler
       {
         try
         {
+          const headerError = await validateImageBeforeDecode(file, this.uploaded_files);
+          if(headerError) { errors.push(`${file.name}: ${headerError}`); continue; }
           const image = await readDecodedImage(file);
           const dimensionError = validateDecodedImage(image, this.uploaded_files);
           if(dimensionError) { errors.push(`${file.name}: ${dimensionError}`); continue; }

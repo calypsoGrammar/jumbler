@@ -7,8 +7,67 @@ import { canvasPointFromClient, PointerSwapSession } from '../src/javascripts/pu
 import { applyPuzzleResize, attemptPuzzleScale, drawPuzzleFragments, puzzleCompletionPercent, puzzleScaleControlState } from '../src/javascripts/puzzle-scaling.js';
 import {
   MAX_FILE_BYTES, MAX_IMAGE_PIXELS, MAX_LIBRARY_IMAGES, MAX_LIBRARY_PIXELS,
-  readDecodedImage, validateDecodedImage, validateGrid, validateImport,
+  imageDimensionsFromHeader, readDecodedImage, validateDecodedImage, validateGrid,
+  validateImageBeforeDecode, validateImport,
 } from '../src/javascripts/image-import.js';
+
+function header(type, width, height, variant = 'VP8X')
+{
+  if(type === 'image/png')
+  {
+    const bytes = new Uint8Array(33);
+    bytes.set([137, 80, 78, 71, 13, 10, 26, 10, 0, 0, 0, 13, 73, 72, 68, 82]);
+    new DataView(bytes.buffer).setUint32(16, width);
+    new DataView(bytes.buffer).setUint32(20, height);
+    return bytes;
+  }
+  if(type === 'image/gif')
+  {
+    const bytes = new Uint8Array(10);
+    bytes.set([71, 73, 70, 56, 57, 97]);
+    new DataView(bytes.buffer).setUint16(6, width, true);
+    new DataView(bytes.buffer).setUint16(8, height, true);
+    return bytes;
+  }
+  if(type === 'image/jpeg')
+  {
+    const bytes = new Uint8Array(21);
+    bytes.set([0xff, 0xd8, 0xff, 0xc0, 0, 17, 8]);
+    new DataView(bytes.buffer).setUint16(7, height);
+    new DataView(bytes.buffer).setUint16(9, width);
+    bytes[11] = 3;
+    return bytes;
+  }
+  if(type === 'image/webp')
+  {
+    const bytes = new Uint8Array(30);
+    bytes.set([82, 73, 70, 70, 22, 0, 0, 0, 87, 69, 66, 80]);
+    bytes.set(Array.from(variant, char => char.charCodeAt(0)), 12);
+    bytes[16] = 10;
+    if(variant === 'VP8X')
+    {
+      const put24 = (offset, value) => { bytes[offset] = value & 255; bytes[offset + 1] = value >> 8 & 255; bytes[offset + 2] = value >> 16 & 255; };
+      put24(24, width - 1);
+      put24(27, height - 1);
+    }
+    else if(variant === 'VP8L')
+    {
+      bytes[20] = 0x2f;
+      bytes[21] = (width - 1) & 255;
+      bytes[22] = ((width - 1) >> 8 & 0x3f) | (((height - 1) & 3) << 6);
+      bytes[23] = (height - 1) >> 2 & 255;
+      bytes[24] = (height - 1) >> 10 & 15;
+    }
+    else
+    {
+      bytes.set([0x9d, 0x01, 0x2a], 23);
+      new DataView(bytes.buffer).setUint16(26, width, true);
+      new DataView(bytes.buffer).setUint16(28, height, true);
+    }
+    return bytes;
+  }
+  return new Uint8Array(0);
+}
 
 function browserHarness()
 {
@@ -45,6 +104,7 @@ function browserHarness()
   {
     readAsDataURL(file)
     {
+      file.decodeReadCount = (file.decodeReadCount || 0) + 1;
       this.result = file.data;
       queueMicrotask(() => this.onload());
     }
@@ -66,7 +126,7 @@ function browserHarness()
     svg: { eye: '', dice: '', up: '', down: '', theme: '' }, Alpine: { start() {} },
     canvasPointFromClient, PointerSwapSession, applyPuzzleResize, attemptPuzzleScale,
     drawPuzzleFragments, puzzleCompletionPercent, puzzleScaleControlState,
-    readDecodedImage: decode, validateDecodedImage, validateGrid, validateImport };
+    readDecodedImage: decode, validateDecodedImage, validateGrid, validateImageBeforeDecode, validateImport };
   return { context, elements, window };
 }
 
@@ -81,7 +141,11 @@ async function loadPage()
 
 function file(name, type, size, width = 100, height = 100, bad = false)
 {
-  return { name, type, size, data: { width, height, bad } };
+  const bytes = header(type, width, height);
+  return {
+    name, type, size, data: { width, height, bad },
+    slice(start, end) { return { arrayBuffer: async () => bytes.slice(start, end).buffer }; },
+  };
 }
 
 test('the page rejects unsupported files and decode failures without adding selector entries or enabling play', async () => {
@@ -141,6 +205,57 @@ test('play and the image selector remain unavailable until decode completes', as
   await importing;
   assert.equal(elements.get('PLAY').disabled, false);
   assert.equal(elements.get('UPLOADED').children.length, 1);
+});
+
+test('PNG, GIF, WebP variants, and JPEG dimensions are read from headers', () => {
+  for(const [type, variant] of [
+    ['image/png'], ['image/gif'], ['image/jpeg'],
+    ['image/webp', 'VP8X'], ['image/webp', 'VP8L'], ['image/webp', 'VP8 '],
+  ])
+  {
+    assert.deepEqual(imageDimensionsFromHeader(header(type, 1234, 567), type),
+      { width: 1234, height: 567 }, `${type} ${variant || ''}`);
+  }
+  assert.equal(imageDimensionsFromHeader(header('image/png', 100, 100), 'image/jpeg'), null);
+  assert.equal(imageDimensionsFromHeader(new Uint8Array([0xff, 0xd8, 0xff, 0xe0, 0xff]), 'image/jpeg'), null);
+  assert.equal(imageDimensionsFromHeader(new Uint8Array(0), 'image/png'), null);
+});
+
+test('oversized and unparseable headers are rejected before FileReader or decode', async () => {
+  const { window, elements } = await loadPage();
+  for(const [type, variant] of [
+    ['image/png'], ['image/gif'], ['image/jpeg'],
+    ['image/webp', 'VP8X'], ['image/webp', 'VP8L'], ['image/webp', 'VP8 '],
+  ])
+  {
+    const oversized = file('huge', type, 100, 40_000, 40_000);
+    if(variant)
+    {
+      const bytes = header(type, 40_000, 40_000, variant);
+      oversized.slice = (start, end) => ({ arrayBuffer: async () => bytes.slice(start, end).buffer });
+    }
+    elements.get('IMPORT').files = [oversized];
+    await window.jumbler.import();
+    assert.match(elements.get('ERROR').textContent, /dimensions/);
+    assert.equal(oversized.decodeReadCount || 0, 0);
+    assert.equal(elements.get('UPLOADED').children.length, 0);
+  }
+
+  const unknown = file('unknown.png', 'image/png', 100);
+  unknown.slice = () => ({ arrayBuffer: async () => new Uint8Array([1, 2, 3]).buffer });
+  elements.get('IMPORT').files = [unknown];
+  await window.jumbler.import();
+  assert.match(elements.get('ERROR').textContent, /identify image dimensions/);
+  assert.equal(unknown.decodeReadCount || 0, 0);
+
+  const tooManyPixels = file('many-pixels.png', 'image/png', 100, 3000, 3000);
+  elements.get('IMPORT').files = [tooManyPixels];
+  await window.jumbler.import();
+  assert.match(elements.get('ERROR').textContent, /dimensions/);
+  assert.equal(tooManyPixels.decodeReadCount || 0, 0);
+
+  const fullLibrary = Array(4).fill({ naturalWidth: 2048, naturalHeight: 2048 });
+  assert.match(await validateImageBeforeDecode(file('extra.png', 'image/png', 100, 100, 100), fullLibrary), /library/);
 });
 
 test('file, batch, decoded size, library, and numeric grid limits are enforced', () => {

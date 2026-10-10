@@ -21,6 +21,15 @@ function selectFiles(input, files)
   input.files = transfer.files;
 }
 
+function corruptPng()
+{
+  const bytes = new Uint8Array(33);
+  bytes.set([137, 80, 78, 71, 13, 10, 26, 10, 0, 0, 0, 13, 73, 72, 68, 82]);
+  new DataView(bytes.buffer).setUint32(16, 100);
+  new DataView(bytes.buffer).setUint32(20, 100);
+  return bytes;
+}
+
 try
 {
   await new Promise((resolve, reject) => {
@@ -36,7 +45,7 @@ try
   check($('ERROR').textContent.includes('notes.txt'), 'unsupported file error is visible');
   check($('UPLOADED').options.length === 0, 'unsupported file entered selector');
 
-  selectFiles($('IMPORT'), [new File(['broken'], 'broken.png', { type: 'image/png' })]);
+  selectFiles($('IMPORT'), [new File([corruptPng()], 'broken.png', { type: 'image/png' })]);
   await page.jumbler.import();
   check($('ERROR').textContent.includes('decode failed'), 'decode error is visible');
   check($('UPLOADED').options.length === 0 && $('PLAY').disabled, 'failed decode enabled play');
@@ -54,7 +63,7 @@ try
   const previousFragments = page.jumbler.fragments;
   const previousWidth = $('CANVAS').width;
 
-  selectFiles($('IMPORT'), [new File(['broken'], 'again.png', { type: 'image/png' })]);
+  selectFiles($('IMPORT'), [new File([corruptPng()], 'again.png', { type: 'image/png' })]);
   await page.jumbler.import();
   $('ROWS').value = '100000';
   $('PLAY').click();
