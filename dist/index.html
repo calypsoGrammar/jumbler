@@ -9,7 +9,7 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Unkempt:wght@400;700&display=swap" rel="stylesheet">
     <title>Jumbler</title>
-    <script type="module" crossorigin src="/jumbler/assets/index-c378cd81.js"></script>
+    <script type="module" crossorigin src="/jumbler/assets/index-2f98cb9e.js"></script>
     <link rel="stylesheet" href="/jumbler/assets/index-a1fa34e3.css">
   </head>
   <body
@@ -104,7 +104,8 @@
           <select class="flex justify-center items-center rounded-lg m-4 border border-black rounded-lg p-2 active:scale-95" id="UPLOADED" style="min-width: 200px; max-width:250px"></select>    
           <button
           id="PLAY"
-          class="m-2 p-2 active:scale-95 bg-mod_dark text-mod_light rounded-lg hover:bg-mod_dark_light flex justify-center items-center border border-mod_light"
+          disabled
+          class="m-2 p-2 active:scale-95 bg-mod_dark text-mod_light rounded-lg hover:bg-mod_dark_light flex justify-center items-center border border-mod_light disabled:opacity-40 disabled:cursor-not-allowed"
           >play</button>
 
           <label class='m-2' for="LOAD">import</label>
@@ -115,6 +116,7 @@
             hidden
             id="IMPORT"
             type="file"
+            accept="image/jpeg,image/png,image/webp,image/gif"
             multiple />
             <button
             id="SELECT"
@@ -125,6 +127,8 @@
             class="m-2 p-2 active:scale-95 bg-mod_dark text-mod_light rounded-lg hover:bg-mod_dark_light flex justify-center items-center border border-mod_light"
             >load</button>
           </div>
+
+          <p id="ERROR" role="alert" aria-live="polite" class="mx-4 text-center"></p>
 
         </div>
 

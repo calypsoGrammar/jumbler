@@ -3,6 +3,7 @@
 import svg from './svg.js';
 import Alpine from 'alpinejs';
 import { canvasPointFromClient, PointerSwapSession } from './puzzle-coordinates.js';
+import { readDecodedImage, validateDecodedImage, validateGrid, validateImport } from './image-import.js';
 import {
   applyPuzzleResize,
   attemptPuzzleScale,
@@ -37,6 +38,7 @@ const PLAY = document.getElementById("PLAY");
 const SELECT = document.getElementById("SELECT");
 const IMPORT = document.getElementById("IMPORT");
 const LOAD = document.getElementById("LOAD");
+const ERROR = document.getElementById("ERROR");
 
 ORIGINAL.innerHTML = svg.eye.trim();
 JUMBLE.innerHTML = svg.dice.trim();
@@ -82,6 +84,7 @@ class Jumbler
     this.original = [];
     this.fragments = [];
     this.uploaded_files = [];
+    this.importing = false;
 
     this.stored_width = 0;
     this.stored_height = 0;
@@ -92,6 +95,18 @@ class Jumbler
 
     this.current_img = new Image();
     this.update_scale_controls();
+    this.update_play_control();
+  }
+
+  report_error(message)
+  {
+    ERROR.textContent = message;
+  }
+
+  update_play_control()
+  {
+    PLAY.disabled = this.uploaded_files.length === 0;
+    UPLOADED.disabled = this.uploaded_files.length === 0;
   }
 
   toggle_dark()
@@ -142,38 +157,46 @@ class Jumbler
     }
   }
 
-  import() 
+  async import()
   {
-    let files = IMPORT.files;
+    if(this.importing) return;
+    const files = Array.from(IMPORT.files || []);
+    IMPORT.value = '';
+    const error = validateImport(files, this.uploaded_files);
+    if(error) { this.report_error(error); return; }
+    if(files.length === 0) return;
 
-    function read_this_file(file)
+    this.importing = true;
+    LOAD.disabled = true;
+    this.report_error('');
+    const errors = [];
+    try
     {
-      if(window.File && window.FileReader && window.FileList && window.Blob)
+      for(const file of files)
       {
-        let reader = new FileReader();
-    
-        reader.addEventListener("load", function ()
+        try
         {
-          let list_img = document.createElement("img");
-          list_img.src = this.result;
-          window.jumbler.uploaded_files.push(list_img);
-          let new_option = document.createElement('option');
-          new_option.value = window.jumbler.uploaded_files.length - 1;
-          new_option.innerHTML = file.name;
-          UPLOADED.appendChild(new_option);
-        }, 
-        false);
-
-        reader.readAsDataURL(file);
+          const image = await readDecodedImage(file);
+          const dimensionError = validateDecodedImage(image, this.uploaded_files);
+          if(dimensionError) { errors.push(`${file.name}: ${dimensionError}`); continue; }
+          const option = document.createElement('option');
+          option.value = String(this.uploaded_files.length);
+          option.textContent = file.name;
+          this.uploaded_files.push(image);
+          UPLOADED.appendChild(option);
+          this.update_play_control();
+        }
+        catch(readError)
+        {
+          errors.push(`${file.name}: ${readError.message}`);
+        }
       }
     }
-
-    if(files.length > 0)
+    finally
     {
-      for(let f = 0; f < files.length; f++)
-      {
-        read_this_file(files[f]);
-      }
+      this.importing = false;
+      LOAD.disabled = false;
+      this.report_error(errors.join(' '));
     }
   }
 
@@ -181,10 +204,12 @@ class Jumbler
   {
     if(this.uploaded_files.length == 0) return;
     const nextImage = this.uploaded_files[UPLOADED.value];
+    if(!nextImage) { this.report_error('Choose an imported image.'); return; }
     if(this.init(this.scale, nextImage))
     {
       this.playing = false;
       this.pointerSession.clear();
+      this.report_error('');
     }
   }
 
@@ -225,8 +250,9 @@ class Jumbler
 
   init(targetScale = this.scale, image = this.current_img)
   {
-    const rows = Number(ROWS.value);
-    const columns = Number(COLUMNS.value);
+    const grid = validateGrid(ROWS.value, COLUMNS.value);
+    if(grid.error) { this.report_error(grid.error); return false; }
+    const { rows, columns } = grid;
     const applied = applyPuzzleResize(this, {
       canvas: CANVAS,
       context: c,
@@ -236,10 +262,15 @@ class Jumbler
       tilesDown: rows,
       scale: targetScale,
     });
-    if(!applied) return false;
+    if(!applied)
+    {
+      this.report_error('This image and grid exceed the puzzle canvas limits. Reduce the scale or tile count.');
+      return false;
+    }
 
     this.show_original = true;
     ORIGINAL.style.transform = 'rotate(90deg)';
+    this.report_error('');
     return true;
   }
 

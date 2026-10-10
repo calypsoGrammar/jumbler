@@ -1,0 +1,73 @@
+<!doctype html>
+<html lang="en">
+<meta charset="utf-8">
+<title>Jumbler browser import test</title>
+<pre id="results">Running…</pre>
+<script type="module">
+const results = document.getElementById('results');
+const frame = document.createElement('iframe');
+frame.src = '../index.html';
+document.body.append(frame);
+
+function check(condition, message)
+{
+  if(!condition) throw new Error(message);
+}
+
+function selectFiles(input, files)
+{
+  const transfer = new DataTransfer();
+  for(const file of files) transfer.items.add(file);
+  input.files = transfer.files;
+}
+
+try
+{
+  await new Promise((resolve, reject) => {
+    frame.onload = resolve;
+    frame.onerror = reject;
+  });
+  const page = frame.contentWindow;
+  const $ = id => page.document.getElementById(id);
+  check($('PLAY').disabled, 'play must start disabled');
+
+  selectFiles($('IMPORT'), [new File(['text'], 'notes.txt', { type: 'text/plain' })]);
+  await page.jumbler.import();
+  check($('ERROR').textContent.includes('notes.txt'), 'unsupported file error is visible');
+  check($('UPLOADED').options.length === 0, 'unsupported file entered selector');
+
+  selectFiles($('IMPORT'), [new File(['broken'], 'broken.png', { type: 'image/png' })]);
+  await page.jumbler.import();
+  check($('ERROR').textContent.includes('decode failed'), 'decode error is visible');
+  check($('UPLOADED').options.length === 0 && $('PLAY').disabled, 'failed decode enabled play');
+
+  const imageCanvas = document.createElement('canvas');
+  imageCanvas.width = 100;
+  imageCanvas.height = 100;
+  imageCanvas.getContext('2d').fillRect(0, 0, 100, 100);
+  const blob = await new Promise(resolve => imageCanvas.toBlob(resolve, 'image/png'));
+  selectFiles($('IMPORT'), [new File([blob], 'good.png', { type: 'image/png' })]);
+  await page.jumbler.import();
+  check($('UPLOADED').options.length === 1 && !$('PLAY').disabled, 'valid image is not playable');
+  $('PLAY').click();
+  const previousImage = page.jumbler.current_img;
+  const previousFragments = page.jumbler.fragments;
+  const previousWidth = $('CANVAS').width;
+
+  selectFiles($('IMPORT'), [new File(['broken'], 'again.png', { type: 'image/png' })]);
+  await page.jumbler.import();
+  $('ROWS').value = '100000';
+  $('PLAY').click();
+  check($('ERROR').textContent.includes('Rows and columns'), 'grid error is visible');
+  check($('UPLOADED').options.length === 1 && !$('PLAY').disabled, 'previous selection changed');
+  check(page.jumbler.current_img === previousImage && page.jumbler.fragments === previousFragments &&
+    $('CANVAS').width === previousWidth, 'invalid input changed the playable puzzle');
+  results.textContent = 'PASS: import, decode, selector, play, and puzzle preservation';
+}
+catch(error)
+{
+  results.textContent = `FAIL: ${error.stack || error}`;
+  throw error;
+}
+</script>
+</html>
