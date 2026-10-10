@@ -69,9 +69,8 @@ export function puzzleGeometry(imageWidth, imageHeight, tilesAcross, tilesDown, 
   const scaledHeight = Math.floor(imageHeight * scale);
   if(scaledWidth < tilesAcross || scaledHeight < tilesDown) return null;
 
-  // Equal integer tile sizes let raw ImageData move between every grid position safely.
-  const canvasWidth = scaledWidth - scaledWidth % tilesAcross;
-  const canvasHeight = scaledHeight - scaledHeight % tilesDown;
+  const canvasWidth = scaledWidth;
+  const canvasHeight = scaledHeight;
   const canvasPixels = canvasWidth * canvasHeight;
   const total = tilesAcross * tilesDown;
 
@@ -82,20 +81,38 @@ export function puzzleGeometry(imageWidth, imageHeight, tilesAcross, tilesDown, 
   return {
     canvasWidth,
     canvasHeight,
-    tileWidth: canvasWidth / tilesAcross,
-    tileHeight: canvasHeight / tilesDown,
     columns: pixelPartitions(canvasWidth, tilesAcross),
     rows: pixelPartitions(canvasHeight, tilesDown),
     total,
   };
 }
 
-export function drawPuzzleFragments(context, fragments)
+export function drawPuzzleFragments(context, fragments, createCanvas)
 {
+  let tileCanvas;
   for(const fragment of fragments)
   {
-    context.putImageData(fragment.frag, fragment.x, fragment.y);
+    if(fragment.frag.width === fragment.width && fragment.frag.height === fragment.height)
+    {
+      context.putImageData(fragment.frag, fragment.x, fragment.y);
+    }
+    else
+    {
+      // A swapped edge tile can have a different size from its destination.
+      if(!tileCanvas) tileCanvas = createCanvas();
+      tileCanvas.width = fragment.frag.width;
+      tileCanvas.height = fragment.frag.height;
+      tileCanvas.getContext('2d').putImageData(fragment.frag, 0, 0);
+      context.drawImage(tileCanvas, fragment.x, fragment.y, fragment.width, fragment.height);
+    }
   }
+}
+
+export function puzzleCompletionPercent(fragments, original)
+{
+  if(fragments.length === 0) return 0;
+  const matches = fragments.filter((fragment, index) => fragment.frag === original[index].frag).length;
+  return Math.floor(100 * matches / fragments.length);
 }
 
 export function resizePuzzle({
@@ -134,9 +151,9 @@ export function resizePuzzle({
   try
   {
     stagingContext.drawImage(image, 0, 0, geometry.canvasWidth, geometry.canvasHeight);
-    for(let tileX = 0; tileX < tilesAcross; tileX++)
+    for(let tileY = 0; tileY < tilesDown; tileY++)
     {
-      for(let tileY = 0; tileY < tilesDown; tileY++)
+      for(let tileX = 0; tileX < tilesAcross; tileX++)
       {
         const horizontal = geometry.columns[tileX];
         const vertical = geometry.rows[tileY];
@@ -148,8 +165,8 @@ export function resizePuzzle({
         );
         fragments.push({
           index: fragments.length,
-          row: tileX,
-          column: tileY,
+          row: tileY,
+          column: tileX,
           x: horizontal.start,
           y: vertical.start,
           width: horizontal.size,
@@ -220,8 +237,8 @@ export function applyPuzzleResize(puzzle, options)
   puzzle.current_img = options.image;
   puzzle.stored_width = resized.width;
   puzzle.stored_height = resized.height;
-  puzzle.stored_rows = options.tilesAcross;
-  puzzle.stored_columns = options.tilesDown;
+  puzzle.stored_rows = options.tilesDown;
+  puzzle.stored_columns = options.tilesAcross;
   puzzle.total = resized.geometry.total;
   puzzle.fragments = resized.fragments;
   puzzle.original = resized.fragments.map(fragment => ({ ...fragment }));

@@ -29,7 +29,7 @@ export function tileIndexFromPoint(x, y, canvasWidth, canvasHeight, tilesAcross,
 
   const tileX = Math.floor(x / canvasWidth * tilesAcross);
   const tileY = Math.floor(y / canvasHeight * tilesDown);
-  const index = tileX * tilesDown + tileY;
+  const index = tileY * tilesAcross + tileX;
   const total = tilesAcross * tilesDown;
 
   return index >= 0 && index < total ? index : null;
