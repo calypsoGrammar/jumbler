@@ -39,6 +39,11 @@ archon:
       Ask only when the answer would materially change the work: an ambiguous or contradictory requirement, an acceptance criterion that cannot be checked, an unclear limit, or work that belongs in another ticket. Ask the smallest concrete question, and offer options where you can.
 
       Treat these as owner decisions, whether or not the project has users yet. If the ticket could lead the agent to sign users out, change or drop stored data or saved files, raise the project's runtime, engine, database or service requirements, or remove a package, route, asset or feature that something might still use, and the ticket does not already say how to handle that, ask for a policy: one question per kind of change, not per case.
+  implement:
+    # File the implementer's suggested follow-ups and open owner decisions
+    # (labelled archon:owner-decision) as related Backlog issues; Archon never
+    # starts them on its own.
+    file_followups: true
   review:
     profile: opus
     # File findings a passing review leaves open (below material_severity) as
