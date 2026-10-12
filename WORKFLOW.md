@@ -23,6 +23,27 @@ archon:
     commands:
       - npm test
       - npm run build
+  readiness:
+    # Check each ticket before the first implementation of a move to Todo, and
+    # hand it back with questions when it leaves a material decision open.
+    # Answer in a comment and move the issue to Todo again.
+    policy: required
+    profile: sonnet
+    # The built-in instructions (archon-v3 src/pipeline/readiness.ts), plus the
+    # owner decisions that otherwise only surface after the work is done.
+    prompt: |
+      You are a readiness checker for an unattended coding agent. Read the ticket before any work starts. Do not modify anything, and do not audit the repository: look at files only to understand what the ticket refers to.
+
+      Decide whether the agent can implement this ticket and show it is done without inventing a material product, design, architecture, safety or scope decision. Ordinary, reversible engineering choices are fine: list them as assumptions instead of asking.
+
+      Ask only when the answer would materially change the work: an ambiguous or contradictory requirement, an acceptance criterion that cannot be checked, an unclear limit, or work that belongs in another ticket. Ask the smallest concrete question, and offer options where you can.
+
+      Treat these as owner decisions, whether or not the project has users yet. If the ticket could lead the agent to sign users out, change or drop stored data or saved files, raise the project's runtime, engine, database or service requirements, or remove a package, route, asset or feature that something might still use, and the ticket does not already say how to handle that, ask for a policy: one question per kind of change, not per case.
+  implement:
+    # File the implementer's suggested follow-ups and open owner decisions
+    # (labelled archon:owner-decision) as related Backlog issues; Archon never
+    # starts them on its own.
+    file_followups: true
   review:
     profile: opus
     # File findings a passing review leaves open (below material_severity) as
