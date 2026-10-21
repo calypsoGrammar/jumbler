@@ -9,7 +9,28 @@ import {
   drawPuzzleFragments,
   puzzleCompletionPercent,
   puzzleScaleControlState,
+  MAX_PUZZLE_TILES,
+  MAX_TILES_PER_AXIS,
 } from './puzzle-scaling.js';
+
+const SUPPORTED_TYPES = new Set(['image/png', 'image/jpeg', 'image/webp', 'image/gif']);
+const MAX_FILE_BYTES = 10 * 1024 * 1024;
+const MAX_BATCH_BYTES = 20 * 1024 * 1024;
+const MAX_LIBRARY_IMAGES = 8;
+const MAX_IMAGE_DIMENSION = 4096;
+const MAX_IMAGE_PIXELS = 8_388_608;
+const MAX_LIBRARY_PIXELS = 16_777_216;
+
+function readFile(file)
+{
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(reader.result);
+    reader.onerror = () => reject(new Error(`Could not read ${file.name}.`));
+    reader.onabort = () => reject(new Error(`Reading ${file.name} was cancelled.`));
+    reader.readAsDataURL(file);
+  });
+}
 
 window.Alpine = Alpine;
 Alpine.start();
@@ -37,6 +58,7 @@ const PLAY = document.getElementById("PLAY");
 const SELECT = document.getElementById("SELECT");
 const IMPORT = document.getElementById("IMPORT");
 const LOAD = document.getElementById("LOAD");
+const STATUS = document.getElementById("STATUS");
 
 ORIGINAL.innerHTML = svg.eye.trim();
 JUMBLE.innerHTML = svg.dice.trim();
@@ -82,6 +104,8 @@ class Jumbler
     this.original = [];
     this.fragments = [];
     this.uploaded_files = [];
+    this.library_pixels = 0;
+    this.importing = false;
 
     this.stored_width = 0;
     this.stored_height = 0;
@@ -142,38 +166,83 @@ class Jumbler
     }
   }
 
-  import() 
+  async import()
   {
-    let files = IMPORT.files;
+    if(this.importing) return;
+    const files = Array.from(IMPORT.files);
+    IMPORT.value = '';
+    if(files.length === 0) return;
 
-    function read_this_file(file)
+    if(files.length + this.uploaded_files.length > MAX_LIBRARY_IMAGES)
     {
-      if(window.File && window.FileReader && window.FileList && window.Blob)
-      {
-        let reader = new FileReader();
-    
-        reader.addEventListener("load", function ()
-        {
-          let list_img = document.createElement("img");
-          list_img.src = this.result;
-          window.jumbler.uploaded_files.push(list_img);
-          let new_option = document.createElement('option');
-          new_option.value = window.jumbler.uploaded_files.length - 1;
-          new_option.innerHTML = file.name;
-          UPLOADED.appendChild(new_option);
-        }, 
-        false);
-
-        reader.readAsDataURL(file);
-      }
+      STATUS.textContent = `The image library holds at most ${MAX_LIBRARY_IMAGES} images.`;
+      return;
+    }
+    if(files.some(file => !SUPPORTED_TYPES.has(file.type)))
+    {
+      STATUS.textContent = 'Choose PNG, JPEG, WebP, or GIF image files.';
+      return;
+    }
+    if(files.some(file => file.size === 0 || file.size > MAX_FILE_BYTES))
+    {
+      STATUS.textContent = 'Each image must be nonempty and at most 10 MiB.';
+      return;
+    }
+    if(files.reduce((bytes, file) => bytes + file.size, 0) > MAX_BATCH_BYTES)
+    {
+      STATUS.textContent = 'A selection may contain at most 20 MiB of images.';
+      return;
     }
 
-    if(files.length > 0)
+    this.importing = true;
+    LOAD.disabled = true;
+    STATUS.textContent = 'Checking images…';
+    const pending = [];
+    let pendingPixels = 0;
+    try
     {
-      for(let f = 0; f < files.length; f++)
+      for(const file of files)
       {
-        read_this_file(files[f]);
+        const image = new Image();
+        image.src = await readFile(file);
+        try { await image.decode(); }
+        catch { throw new Error(`${file.name} could not be decoded as an image.`); }
+
+        const width = image.naturalWidth;
+        const height = image.naturalHeight;
+        const pixels = width * height;
+        if(width === 0 || height === 0 || width > MAX_IMAGE_DIMENSION || height > MAX_IMAGE_DIMENSION || pixels > MAX_IMAGE_PIXELS)
+        {
+          throw new Error(`${file.name} exceeds the image dimension or pixel limit.`);
+        }
+        pendingPixels += pixels;
+        if(this.library_pixels + pendingPixels > MAX_LIBRARY_PIXELS)
+        {
+          throw new Error('The image library exceeds its decoded pixel limit.');
+        }
+        pending.push({ image, name: file.name });
       }
+
+      for(const { image, name } of pending)
+      {
+        const option = document.createElement('option');
+        option.value = this.uploaded_files.length;
+        option.textContent = name;
+        this.uploaded_files.push(image);
+        UPLOADED.appendChild(option);
+      }
+      this.library_pixels += pendingPixels;
+      PLAY.disabled = false;
+      STATUS.textContent = `${pending.length} image${pending.length === 1 ? '' : 's'} ready to play.`;
+    }
+    catch(error)
+    {
+      STATUS.textContent = error.message || 'Unable to import images.';
+    }
+    finally
+    {
+      this.importing = false;
+      LOAD.disabled = false;
     }
   }
 
@@ -181,10 +250,12 @@ class Jumbler
   {
     if(this.uploaded_files.length == 0) return;
     const nextImage = this.uploaded_files[UPLOADED.value];
+    if(!nextImage) return;
     if(this.init(this.scale, nextImage))
     {
       this.playing = false;
       this.pointerSession.clear();
+      STATUS.textContent = '';
     }
   }
 
@@ -227,6 +298,14 @@ class Jumbler
   {
     const rows = Number(ROWS.value);
     const columns = Number(COLUMNS.value);
+    if(!/^[1-9]\d*$/.test(ROWS.value) || !/^[1-9]\d*$/.test(COLUMNS.value) ||
+       !Number.isInteger(rows) || !Number.isInteger(columns) ||
+       rows < 1 || columns < 1 || rows > MAX_TILES_PER_AXIS || columns > MAX_TILES_PER_AXIS ||
+       rows * columns > MAX_PUZZLE_TILES)
+    {
+      STATUS.textContent = `Enter whole rows and columns from 1 to ${MAX_TILES_PER_AXIS}, with at most ${MAX_PUZZLE_TILES} tiles.`;
+      return false;
+    }
     const applied = applyPuzzleResize(this, {
       canvas: CANVAS,
       context: c,
@@ -236,7 +315,11 @@ class Jumbler
       tilesDown: rows,
       scale: targetScale,
     });
-    if(!applied) return false;
+    if(!applied)
+    {
+      STATUS.textContent = 'This image and grid cannot fit within the puzzle canvas limits.';
+      return false;
+    }
 
     this.show_original = true;
     ORIGINAL.style.transform = 'rotate(90deg)';

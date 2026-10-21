@@ -5,8 +5,8 @@ export const PUZZLE_SCALE_STEP = 0.1;
 // These limits bound both canvas allocation and the per-tile pixel extraction work.
 export const MAX_CANVAS_DIMENSION = 4096;
 export const MAX_CANVAS_PIXELS = 4_194_304;
-export const MAX_TILES_PER_AXIS = 64;
-export const MAX_PUZZLE_TILES = 4096;
+export const MAX_TILES_PER_AXIS = 32;
+export const MAX_PUZZLE_TILES = 256;
 
 function roundedScale(value)
 {
