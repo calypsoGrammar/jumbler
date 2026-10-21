@@ -2,6 +2,7 @@ import assert from 'node:assert/strict';
 import { spawn } from 'node:child_process';
 import { setTimeout as delay } from 'node:timers/promises';
 import { deflateSync } from 'node:zlib';
+import { imageDimensions } from '../src/javascripts/image-dimensions.js';
 
 process.env.PLAYWRIGHT_BROWSERS_PATH = '/usr/local/share/ms-playwright';
 const { chromium } = await import('/usr/local/lib/node_modules/playwright/index.mjs');
@@ -94,8 +95,14 @@ function oversizedCompressedPng()
 
 function corruptDecodedPng()
 {
-  // The valid IHDR passes pre-decode dimension checks; IDAT is invalid zlib data.
-  return grayscalePng(64, 64, Buffer.from([0, 1, 2, 3, 4]));
+  // Readable IHDR dimensions pass the app's parser. An invalid grayscale bit
+  // depth and critical-chunk CRC force Chromium's PNG decoder to reject the
+  // file instead of showing a partially decoded blank image.
+  const png = grayscalePng(64, 64, Buffer.from([0, 1, 2, 3, 4]));
+  png[24] = 3; // Grayscale PNG only permits bit depths 1, 2, 4, 8, or 16.
+  png[29] ^= 0xff; // First byte of the IHDR CRC, after its 13 data bytes.
+  assert.deepEqual(imageDimensions(Uint8Array.from(png).buffer, 'image/png'), { width: 64, height: 64 });
+  return png;
 }
 
 async function importFiles(page, files)
