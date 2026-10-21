@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict';
 import { spawn } from 'node:child_process';
 import { setTimeout as delay } from 'node:timers/promises';
+import { deflateSync } from 'node:zlib';
 
 process.env.PLAYWRIGHT_BROWSERS_PATH = '/usr/local/share/ms-playwright';
 const { chromium } = await import('/usr/local/lib/node_modules/playwright/index.mjs');
@@ -43,6 +44,47 @@ async function fixture(page, width = 64, height = 64)
     return canvas.toDataURL('image/png');
   }, [width, height]);
   return Buffer.from(dataUrl.split(',')[1], 'base64');
+}
+
+function oversizedCompressedPng()
+{
+  const width = 8192;
+  const height = 8192;
+  const header = Buffer.alloc(13);
+  header.writeUInt32BE(width, 0);
+  header.writeUInt32BE(height, 4);
+  header[8] = 8; // Eight-bit grayscale; zero-filled scanlines compress well.
+
+  function crc32(bytes)
+  {
+    let crc = 0xffffffff;
+    for(const byte of bytes)
+    {
+      crc ^= byte;
+      for(let bit = 0; bit < 8; bit++) crc = (crc >>> 1) ^ (crc & 1 ? 0xedb88320 : 0);
+    }
+    return (crc ^ 0xffffffff) >>> 0;
+  }
+
+  function chunk(name, data)
+  {
+    const type = Buffer.from(name);
+    const result = Buffer.alloc(12 + data.length);
+    result.writeUInt32BE(data.length, 0);
+    type.copy(result, 4);
+    data.copy(result, 8);
+    result.writeUInt32BE(crc32(result.subarray(4, 8 + data.length)), 8 + data.length);
+    return result;
+  }
+
+  const pixels = Buffer.alloc((width + 1) * height);
+  const compressed = deflateSync(pixels);
+  const png = Buffer.concat([
+    Buffer.from([137, 80, 78, 71, 13, 10, 26, 10]),
+    chunk('IHDR', header), chunk('IDAT', compressed), chunk('IEND', Buffer.alloc(0)),
+  ]);
+  assert.ok(png.length < 10 * 1024 * 1024);
+  return png;
 }
 
 async function importFiles(page, files)
@@ -110,6 +152,18 @@ try
   const oversized = await fixture(page, 4097, 1);
   status = await importFiles(page, [{ name: 'wide.png', mimeType: 'image/png', buffer: oversized }]);
   assert.match(status, /dimension or pixel limit/);
+  await page.evaluate(() => {
+    window.__decodeCalls = 0;
+    const decode = Image.prototype.decode;
+    Image.prototype.decode = function(...args) {
+      window.__decodeCalls++;
+      return decode.apply(this, args);
+    };
+  });
+  status = await importFiles(page, [{ name: 'compressed-8192.png', mimeType: 'image/png', buffer: oversizedCompressedPng() }]);
+  assert.match(status, /dimension or pixel limit/);
+  assert.equal(await page.evaluate(() => window.__decodeCalls), 0);
+  assert.deepEqual(await page.locator('#UPLOADED option').allTextContents(), ['valid.png']);
   status = await importFiles(page, Array.from({ length: 8 }, (_, index) => ({ name: `batch-${index}.png`, mimeType: 'image/png', buffer: valid })));
   assert.match(status, /at most 8 images/);
   assert.deepEqual(await page.locator('#UPLOADED option').allTextContents(), ['valid.png']);
@@ -117,7 +171,7 @@ try
     const puzzle = window.jumbler;
     return puzzle.current_img === window.__prior.image && puzzle.fragments === window.__prior.fragments;
   }), true);
-  console.log('Chromium: file, dimension, batch-size, and image-count limits preserve the puzzle');
+  console.log('Chromium: file, compressed image dimensions, batch-size, and image-count limits preserve the puzzle before decode');
 
   for(const [rows, columns] of [['0', '4'], ['33', '4'], ['17', '16'], ['1.5', '4'], ['1e2', '4']])
   {

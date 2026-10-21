@@ -1,6 +1,7 @@
 "use strict"
 
 import svg from './svg.js';
+import { imageDimensions } from './image-dimensions.js';
 import Alpine from 'alpinejs';
 import { canvasPointFromClient, PointerSwapSession } from './puzzle-coordinates.js';
 import {
@@ -198,18 +199,17 @@ class Jumbler
     LOAD.disabled = true;
     STATUS.textContent = 'Checking images…';
     const pending = [];
+    const checked = [];
     let pendingPixels = 0;
     try
     {
       for(const file of files)
       {
-        const image = new Image();
-        image.src = await readFile(file);
-        try { await image.decode(); }
-        catch { throw new Error(`${file.name} could not be decoded as an image.`); }
-
-        const width = image.naturalWidth;
-        const height = image.naturalHeight;
+        let dimensions;
+        try { dimensions = imageDimensions(await file.arrayBuffer(), file.type); }
+        catch { throw new Error(`Could not read ${file.name}.`); }
+        if(!dimensions) throw new Error(`${file.name} could not be decoded as an image.`);
+        const { width, height } = dimensions;
         const pixels = width * height;
         if(width === 0 || height === 0 || width > MAX_IMAGE_DIMENSION || height > MAX_IMAGE_DIMENSION || pixels > MAX_IMAGE_PIXELS)
         {
@@ -219,6 +219,22 @@ class Jumbler
         if(this.library_pixels + pendingPixels > MAX_LIBRARY_PIXELS)
         {
           throw new Error('The image library exceeds its decoded pixel limit.');
+        }
+        checked.push(file);
+      }
+
+      for(const file of checked)
+      {
+        const image = new Image();
+        image.src = await readFile(file);
+        try { await image.decode(); }
+        catch { throw new Error(`${file.name} could not be decoded as an image.`); }
+        const width = image.naturalWidth;
+        const height = image.naturalHeight;
+        if(width === 0 || height === 0 || width > MAX_IMAGE_DIMENSION || height > MAX_IMAGE_DIMENSION ||
+           width * height > MAX_IMAGE_PIXELS)
+        {
+          throw new Error(`${file.name} exceeds the image dimension or pixel limit.`);
         }
         pending.push({ image, name: file.name });
       }
