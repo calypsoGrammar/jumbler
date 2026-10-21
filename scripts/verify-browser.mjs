@@ -46,45 +46,56 @@ async function fixture(page, width = 64, height = 64)
   return Buffer.from(dataUrl.split(',')[1], 'base64');
 }
 
+function crc32(bytes)
+{
+  let crc = 0xffffffff;
+  for(const byte of bytes)
+  {
+    crc ^= byte;
+    for(let bit = 0; bit < 8; bit++) crc = (crc >>> 1) ^ (crc & 1 ? 0xedb88320 : 0);
+  }
+  return (crc ^ 0xffffffff) >>> 0;
+}
+
+function pngChunk(name, data)
+{
+  const type = Buffer.from(name);
+  const result = Buffer.alloc(12 + data.length);
+  result.writeUInt32BE(data.length, 0);
+  type.copy(result, 4);
+  data.copy(result, 8);
+  result.writeUInt32BE(crc32(result.subarray(4, 8 + data.length)), 8 + data.length);
+  return result;
+}
+
+function grayscalePng(width, height, imageData)
+{
+  const header = Buffer.alloc(13);
+  header.writeUInt32BE(width, 0);
+  header.writeUInt32BE(height, 4);
+  header[8] = 8;
+  return Buffer.concat([
+    Buffer.from([137, 80, 78, 71, 13, 10, 26, 10]),
+    pngChunk('IHDR', header), pngChunk('IDAT', imageData), pngChunk('IEND', Buffer.alloc(0)),
+  ]);
+}
+
 function oversizedCompressedPng()
 {
   const width = 8192;
   const height = 8192;
-  const header = Buffer.alloc(13);
-  header.writeUInt32BE(width, 0);
-  header.writeUInt32BE(height, 4);
-  header[8] = 8; // Eight-bit grayscale; zero-filled scanlines compress well.
-
-  function crc32(bytes)
-  {
-    let crc = 0xffffffff;
-    for(const byte of bytes)
-    {
-      crc ^= byte;
-      for(let bit = 0; bit < 8; bit++) crc = (crc >>> 1) ^ (crc & 1 ? 0xedb88320 : 0);
-    }
-    return (crc ^ 0xffffffff) >>> 0;
-  }
-
-  function chunk(name, data)
-  {
-    const type = Buffer.from(name);
-    const result = Buffer.alloc(12 + data.length);
-    result.writeUInt32BE(data.length, 0);
-    type.copy(result, 4);
-    data.copy(result, 8);
-    result.writeUInt32BE(crc32(result.subarray(4, 8 + data.length)), 8 + data.length);
-    return result;
-  }
-
+  // Eight-bit grayscale; zero-filled scanlines compress well.
   const pixels = Buffer.alloc((width + 1) * height);
   const compressed = deflateSync(pixels);
-  const png = Buffer.concat([
-    Buffer.from([137, 80, 78, 71, 13, 10, 26, 10]),
-    chunk('IHDR', header), chunk('IDAT', compressed), chunk('IEND', Buffer.alloc(0)),
-  ]);
+  const png = grayscalePng(width, height, compressed);
   assert.ok(png.length < 10 * 1024 * 1024);
   return png;
+}
+
+function corruptDecodedPng()
+{
+  // The valid IHDR passes pre-decode dimension checks; IDAT is invalid zlib data.
+  return grayscalePng(64, 64, Buffer.from([0, 1, 2, 3, 4]));
 }
 
 async function importFiles(page, files)
@@ -112,20 +123,35 @@ try
   assert.equal(await page.locator('#PLAY').isDisabled(), true);
   console.log('Chromium: unsupported file rejected before selector or play changes');
 
+  await page.evaluate(() => {
+    window.__decodeCalls = 0;
+    const decode = Image.prototype.decode;
+    Image.prototype.decode = function(...args) {
+      window.__decodeCalls++;
+      return decode.apply(this, args);
+    };
+  });
   status = await importFiles(page, [{ name: 'broken.png', mimeType: 'image/png', buffer: Buffer.from('not a png') }]);
   assert.match(status, /could not be decoded/);
+  assert.equal(await page.evaluate(() => window.__decodeCalls), 0);
+  status = await importFiles(page, [{ name: 'corrupt-idat.png', mimeType: 'image/png', buffer: corruptDecodedPng() }]);
+  assert.match(status, /could not be decoded/);
+  assert.equal(await page.evaluate(() => window.__decodeCalls), 1);
   assert.equal(await page.locator('#UPLOADED option').count(), 0);
   assert.equal(await page.locator('#PLAY').isDisabled(), true);
-  console.log('Chromium: decode failure leaves selector and play disabled');
+  console.log('Chromium: header rejection skips decode; corrupt image data fails in Chromium decode and leaves play disabled');
 
   const valid = await fixture(page);
+  await page.evaluate(() => { window.__decodeCalls = 0; });
   status = await importFiles(page, [
     { name: 'good.png', mimeType: 'image/png', buffer: valid },
-    { name: 'bad.png', mimeType: 'image/png', buffer: Buffer.from('bad image') },
+    { name: 'bad.png', mimeType: 'image/png', buffer: corruptDecodedPng() },
   ]);
   assert.match(status, /could not be decoded/);
+  assert.equal(await page.evaluate(() => window.__decodeCalls), 2);
   assert.equal(await page.locator('#UPLOADED option').count(), 0);
-  console.log('Chromium: a failed multi-file batch adds no partial selector entries');
+  assert.equal(await page.locator('#PLAY').isDisabled(), true);
+  console.log('Chromium: a decode failure after a valid image leaves a multi-file batch uncommitted');
 
   status = await importFiles(page, [{ name: 'valid.png', mimeType: 'image/png', buffer: valid }]);
   assert.match(status, /ready to play/);
@@ -143,6 +169,23 @@ try
   });
   console.log('Chromium: decoded image appears in selector and plays');
 
+  await page.evaluate(() => { window.__decodeCalls = 0; });
+  status = await importFiles(page, [
+    { name: 'another-good.png', mimeType: 'image/png', buffer: valid },
+    { name: 'another-bad.png', mimeType: 'image/png', buffer: corruptDecodedPng() },
+  ]);
+  assert.match(status, /could not be decoded/);
+  assert.equal(await page.evaluate(() => window.__decodeCalls), 2);
+  assert.deepEqual(await page.locator('#UPLOADED option').allTextContents(), ['valid.png']);
+  assert.equal(await page.locator('#PLAY').isEnabled(), true);
+  assert.equal(await page.evaluate(() => {
+    const puzzle = window.jumbler;
+    const canvas = document.getElementById('CANVAS');
+    return puzzle.current_img === window.__prior.image && puzzle.fragments === window.__prior.fragments &&
+      canvas.width === window.__prior.width && canvas.height === window.__prior.height;
+  }), true);
+  console.log('Chromium: failed decode preserves the selector, play control, and prior playable puzzle');
+
   status = await importFiles(page, [{ name: 'too-big.png', mimeType: 'image/png', buffer: Buffer.alloc(10 * 1024 * 1024 + 1) }]);
   assert.match(status, /at most 10 MiB/);
   status = await importFiles(page, Array.from({ length: 3 }, (_, index) => ({
@@ -152,14 +195,7 @@ try
   const oversized = await fixture(page, 4097, 1);
   status = await importFiles(page, [{ name: 'wide.png', mimeType: 'image/png', buffer: oversized }]);
   assert.match(status, /dimension or pixel limit/);
-  await page.evaluate(() => {
-    window.__decodeCalls = 0;
-    const decode = Image.prototype.decode;
-    Image.prototype.decode = function(...args) {
-      window.__decodeCalls++;
-      return decode.apply(this, args);
-    };
-  });
+  await page.evaluate(() => { window.__decodeCalls = 0; });
   status = await importFiles(page, [{ name: 'compressed-8192.png', mimeType: 'image/png', buffer: oversizedCompressedPng() }]);
   assert.match(status, /dimension or pixel limit/);
   assert.equal(await page.evaluate(() => window.__decodeCalls), 0);
