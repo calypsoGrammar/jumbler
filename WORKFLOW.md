@@ -56,8 +56,8 @@ archon:
   models:
     # Profiles come from the service's shared model catalogue (archon-v3
     # docs/operations.md, Models); a Model label on an issue picks another.
-    default: sol
-    fallback: opus
+    default: opus
+    fallback: sol
 ---
 You are working on jumbler, Linear issue {{ issue.identifier }}: {{ issue.title }}.
 {% if attempt %}
