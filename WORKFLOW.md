@@ -4,9 +4,9 @@
 # Archon never auto-merges a change to it. Every key is described in
 # archon-v3's docs/workflow-reference.md.
 tracker:
-  kind: linear
+  kind: chronology
   provider:
-    # Linear project "jumbler".
+    # Work Registry project "jumbler".
     project_id: "a88ddf64-d3e4-47d4-b37c-d24f7140de47"
 hooks:
   # Each attempt starts from a fresh checkout; install dependencies so the
@@ -74,7 +74,7 @@ archon:
     default: opus
     fallback: sol
 ---
-You are working on jumbler, Linear issue {{ issue.identifier }}: {{ issue.title }}.
+You are working on jumbler, issue {{ issue.identifier }}: {{ issue.title }}.
 {% if attempt %}
 This is attempt {{ attempt }}. Earlier attempts were discarded, and this workspace is a fresh checkout.
 {% endif %}
