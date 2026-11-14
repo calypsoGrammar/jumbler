@@ -1,0 +1,30 @@
+name: stable
+
+# The `stable` tag (the default rollback target) and the production hold. See calypsoGrammar/deploy-workflows.
+# Daily: promote production's release to stable once it has run 48 hours. By hand: pin a commit, or clear the hold.
+
+on:
+  schedule:
+    - cron: '17 6 * * *'
+  workflow_dispatch:
+    inputs:
+      action:
+        description: 'What to do'
+        type: choice
+        options: [promote, pin, clear-hold]
+        default: promote
+      ref:
+        description: 'pin: the commit, tag or branch to mark stable'
+        type: string
+        default: ''
+
+permissions:
+  contents: write
+  deployments: read
+
+jobs:
+  stable:
+    uses: calypsoGrammar/deploy-workflows/.github/workflows/stable.yml@v1
+    with:
+      action: ${{ inputs.action || 'promote' }}
+      ref: ${{ inputs.ref }}

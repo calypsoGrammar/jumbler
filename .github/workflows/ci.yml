@@ -1,0 +1,30 @@
+# Checks for pull requests and main. Read-only: it never publishes. The deploy
+# (deploy.yml) publishes only a commit of main on which this job passed.
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - run: npm ci --no-audit --no-fund
+      # The unit tests. The browser check in `npm test` (scripts/verify-browser.mjs)
+      # needs a global Playwright install and does not run here.
+      - run: node --test
+      - run: npm run build
