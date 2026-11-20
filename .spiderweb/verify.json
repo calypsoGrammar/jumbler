@@ -1,0 +1,23 @@
+{
+  "extends": [
+    "escape-hatches",
+    "swallowed-errors",
+    "comments",
+    "graph"
+  ],
+  "tools": [
+    {
+      "id": "npm-audit",
+      "format": "npm-audit",
+      "command": [
+        "npm",
+        "audit",
+        "--json",
+        "--omit=dev"
+      ],
+      "stages": [
+        "release"
+      ]
+    }
+  ]
+}

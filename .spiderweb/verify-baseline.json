@@ -1,0 +1,1331 @@
+{
+  "version": 1,
+  "violations": [
+    {
+      "rule": "no-unused-code",
+      "path": "dist/assets/index-d0cca72a.js",
+      "subject": "dist/assets/index-d0cca72a.js#$e",
+      "detail": "function $e is not used from any other file"
+    },
+    {
+      "rule": "no-unused-code",
+      "path": "dist/assets/index-d0cca72a.js",
+      "subject": "dist/assets/index-d0cca72a.js#$n",
+      "detail": "function $n is not used from any other file"
+    },
+    {
+      "rule": "no-unused-code",
+      "path": "dist/assets/index-d0cca72a.js",
+      "subject": "dist/assets/index-d0cca72a.js#$r",
+      "detail": "function $r is not used from any other file"
+    },
+    {
+      "rule": "no-unused-code",
+      "path": "dist/assets/index-d0cca72a.js",
+      "subject": "dist/assets/index-d0cca72a.js#$t",
+      "detail": "function $t is not used from any other file"
+    },
+    {
+      "rule": "no-unused-code",
+      "path": "dist/assets/index-d0cca72a.js",
+      "subject": "dist/assets/index-d0cca72a.js#A",
+      "detail": "function A is not used from any other file"
+    },
+    {
+      "rule": "no-unused-code",
+      "path": "dist/assets/index-d0cca72a.js",
+      "subject": "dist/assets/index-d0cca72a.js#Ae",
+      "detail": "function Ae is not used from any other file"
+    },
+    {
+      "rule": "no-unused-code",
+      "path": "dist/assets/index-d0cca72a.js",
+      "subject": "dist/assets/index-d0cca72a.js#Ai",
+      "detail": "function Ai is not used from any other file"
+    },
+    {
+      "rule": "no-unused-code",
+      "path": "dist/assets/index-d0cca72a.js",
+      "subject": "dist/assets/index-d0cca72a.js#An",
+      "detail": "function An is not used from any other file"
+    },
+    {
+      "rule": "no-unused-code",
+      "path": "dist/assets/index-d0cca72a.js",
+      "subject": "dist/assets/index-d0cca72a.js#Ao",
+      "detail": "function Ao is not used from any other file"
+    },
+    {
+      "rule": "no-unused-code",
+      "path": "dist/assets/index-d0cca72a.js",
+      "subject": "dist/assets/index-d0cca72a.js#Ar",
+      "detail": "function Ar is not used from any other file"
+    },
+    {
+      "rule": "no-unused-code",
+      "path": "dist/assets/index-d0cca72a.js",
+      "subject": "dist/assets/index-d0cca72a.js#B",
+      "detail": "function B is not used from any other file"
+    },
+    {
+      "rule": "no-unused-code",
+      "path": "dist/assets/index-d0cca72a.js",
+      "subject": "dist/assets/index-d0cca72a.js#Bi",
+      "detail": "function Bi is not used from any other file"
+    },
+    {
+      "rule": "no-unused-code",
+      "path": "dist/assets/index-d0cca72a.js",
+      "subject": "dist/assets/index-d0cca72a.js#Bn",
+      "detail": "function Bn is not used from any other file"
+    },
+    {
+      "rule": "no-unused-code",
+      "path": "dist/assets/index-d0cca72a.js",
+      "subject": "dist/assets/index-d0cca72a.js#Bo",
+      "detail": "function Bo is not used from any other file"
+    },
+    {
+      "rule": "no-unused-code",
+      "path": "dist/assets/index-d0cca72a.js",
+      "subject": "dist/assets/index-d0cca72a.js#Br",
+      "detail": "function Br is not used from any other file"
+    },
+    {
+      "rule": "no-unused-code",
+      "path": "dist/assets/index-d0cca72a.js",
+      "subject": "dist/assets/index-d0cca72a.js#Bt",
+      "detail": "function Bt is not used from any other file"
+    },
+    {
+      "rule": "no-unused-code",
+      "path": "dist/assets/index-d0cca72a.js",
+      "subject": "dist/assets/index-d0cca72a.js#Ci",
+      "detail": "function Ci is not used from any other file"
+    },
+    {
+      "rule": "no-unused-code",
+      "path": "dist/assets/index-d0cca72a.js",
+      "subject": "dist/assets/index-d0cca72a.js#Cn",
+      "detail": "function Cn is not used from any other file"
+    },
+    {
+      "rule": "no-unused-code",
+      "path": "dist/assets/index-d0cca72a.js",
+      "subject": "dist/assets/index-d0cca72a.js#Co",
+      "detail": "function Co is not used from any other file"
+    },
+    {
+      "rule": "no-unused-code",
+      "path": "dist/assets/index-d0cca72a.js",
+      "subject": "dist/assets/index-d0cca72a.js#Cr",
+      "detail": "function Cr is not used from any other file"
+    },
+    {
+      "rule": "no-unused-code",
+      "path": "dist/assets/index-d0cca72a.js",
+      "subject": "dist/assets/index-d0cca72a.js#Di",
+      "detail": "function Di is not used from any other file"
+    },
+    {
+      "rule": "no-unused-code",
+      "path": "dist/assets/index-d0cca72a.js",
+      "subject": "dist/assets/index-d0cca72a.js#Do",
+      "detail": "function Do is not used from any other file"
+    },
+    {
+      "rule": "no-unused-code",
+      "path": "dist/assets/index-d0cca72a.js",
+      "subject": "dist/assets/index-d0cca72a.js#Dr",
+      "detail": "function Dr is not used from any other file"
+    },
+    {
+      "rule": "no-unused-code",
+      "path": "dist/assets/index-d0cca72a.js",
+      "subject": "dist/assets/index-d0cca72a.js#Dt",
+      "detail": "function Dt is not used from any other file"
+    },
+    {
+      "rule": "no-unused-code",
+      "path": "dist/assets/index-d0cca72a.js",
+      "subject": "dist/assets/index-d0cca72a.js#E",
+      "detail": "function E is not used from any other file"
+    },
+    {
+      "rule": "no-unused-code",
+      "path": "dist/assets/index-d0cca72a.js",
+      "subject": "dist/assets/index-d0cca72a.js#Ee",
+      "detail": "function Ee is not used from any other file"
+    },
+    {
+      "rule": "no-unused-code",
+      "path": "dist/assets/index-d0cca72a.js",
+      "subject": "dist/assets/index-d0cca72a.js#Ei",
+      "detail": "function Ei is not used from any other file"
+    },
+    {
+      "rule": "no-unused-code",
+      "path": "dist/assets/index-d0cca72a.js",
+      "subject": "dist/assets/index-d0cca72a.js#Eo",
+      "detail": "function Eo is not used from any other file"
+    },
+    {
+      "rule": "no-unused-code",
+      "path": "dist/assets/index-d0cca72a.js",
+      "subject": "dist/assets/index-d0cca72a.js#Er",
+      "detail": "function Er is not used from any other file"
+    },
+    {
+      "rule": "no-unused-code",
+      "path": "dist/assets/index-d0cca72a.js",
+      "subject": "dist/assets/index-d0cca72a.js#F",
+      "detail": "function F is not used from any other file"
+    },
+    {
+      "rule": "no-unused-code",
+      "path": "dist/assets/index-d0cca72a.js",
+      "subject": "dist/assets/index-d0cca72a.js#Fi",
+      "detail": "function Fi is not used from any other file"
+    },
+    {
+      "rule": "no-unused-code",
+      "path": "dist/assets/index-d0cca72a.js",
+      "subject": "dist/assets/index-d0cca72a.js#Fn",
+      "detail": "function Fn is not used from any other file"
+    },
+    {
+      "rule": "no-unused-code",
+      "path": "dist/assets/index-d0cca72a.js",
+      "subject": "dist/assets/index-d0cca72a.js#Fr",
+      "detail": "function Fr is not used from any other file"
+    },
+    {
+      "rule": "no-unused-code",
+      "path": "dist/assets/index-d0cca72a.js",
+      "subject": "dist/assets/index-d0cca72a.js#Ft",
+      "detail": "function Ft is not used from any other file"
+    },
+    {
+      "rule": "no-unused-code",
+      "path": "dist/assets/index-d0cca72a.js",
+      "subject": "dist/assets/index-d0cca72a.js#G",
+      "detail": "function G is not used from any other file"
+    },
+    {
+      "rule": "no-unused-code",
+      "path": "dist/assets/index-d0cca72a.js",
+      "subject": "dist/assets/index-d0cca72a.js#Gr",
+      "detail": "function Gr is not used from any other file"
+    },
+    {
+      "rule": "no-unused-code",
+      "path": "dist/assets/index-d0cca72a.js",
+      "subject": "dist/assets/index-d0cca72a.js#H",
+      "detail": "function H is not used from any other file"
+    },
+    {
+      "rule": "no-unused-code",
+      "path": "dist/assets/index-d0cca72a.js",
+      "subject": "dist/assets/index-d0cca72a.js#He",
+      "detail": "function He is not used from any other file"
+    },
+    {
+      "rule": "no-unused-code",
+      "path": "dist/assets/index-d0cca72a.js",
+      "subject": "dist/assets/index-d0cca72a.js#Ho",
+      "detail": "function Ho is not used from any other file"
+    },
+    {
+      "rule": "no-unused-code",
+      "path": "dist/assets/index-d0cca72a.js",
+      "subject": "dist/assets/index-d0cca72a.js#Hr",
+      "detail": "function Hr is not used from any other file"
+    },
+    {
+      "rule": "no-unused-code",
+      "path": "dist/assets/index-d0cca72a.js",
+      "subject": "dist/assets/index-d0cca72a.js#Ht",
+      "detail": "function Ht is not used from any other file"
+    },
+    {
+      "rule": "no-unused-code",
+      "path": "dist/assets/index-d0cca72a.js",
+      "subject": "dist/assets/index-d0cca72a.js#I",
+      "detail": "function I is not used from any other file"
+    },
+    {
+      "rule": "no-unused-code",
+      "path": "dist/assets/index-d0cca72a.js",
+      "subject": "dist/assets/index-d0cca72a.js#Ie",
+      "detail": "function Ie is not used from any other file"
+    },
+    {
+      "rule": "no-unused-code",
+      "path": "dist/assets/index-d0cca72a.js",
+      "subject": "dist/assets/index-d0cca72a.js#Io",
+      "detail": "function Io is not used from any other file"
+    },
+    {
+      "rule": "no-unused-code",
+      "path": "dist/assets/index-d0cca72a.js",
+      "subject": "dist/assets/index-d0cca72a.js#Ir",
+      "detail": "function Ir is not used from any other file"
+    },
+    {
+      "rule": "no-unused-code",
+      "path": "dist/assets/index-d0cca72a.js",
+      "subject": "dist/assets/index-d0cca72a.js#It",
+      "detail": "function It is not used from any other file"
+    },
+    {
+      "rule": "no-unused-code",
+      "path": "dist/assets/index-d0cca72a.js",
+      "subject": "dist/assets/index-d0cca72a.js#Jr",
+      "detail": "function Jr is not used from any other file"
+    },
+    {
+      "rule": "no-unused-code",
+      "path": "dist/assets/index-d0cca72a.js",
+      "subject": "dist/assets/index-d0cca72a.js#Jt",
+      "detail": "function Jt is not used from any other file"
+    },
+    {
+      "rule": "no-unused-code",
+      "path": "dist/assets/index-d0cca72a.js",
+      "subject": "dist/assets/index-d0cca72a.js#Kr",
+      "detail": "function Kr is not used from any other file"
+    },
+    {
+      "rule": "no-unused-code",
+      "path": "dist/assets/index-d0cca72a.js",
+      "subject": "dist/assets/index-d0cca72a.js#Ln",
+      "detail": "function Ln is not used from any other file"
+    },
+    {
+      "rule": "no-unused-code",
+      "path": "dist/assets/index-d0cca72a.js",
+      "subject": "dist/assets/index-d0cca72a.js#Lr",
+      "detail": "function Lr is not used from any other file"
+    },
+    {
+      "rule": "no-unused-code",
+      "path": "dist/assets/index-d0cca72a.js",
+      "subject": "dist/assets/index-d0cca72a.js#Lt",
+      "detail": "function Lt is not used from any other file"
+    },
+    {
+      "rule": "no-unused-code",
+      "path": "dist/assets/index-d0cca72a.js",
+      "subject": "dist/assets/index-d0cca72a.js#Me",
+      "detail": "function Me is not used from any other file"
+    },
+    {
+      "rule": "no-unused-code",
+      "path": "dist/assets/index-d0cca72a.js",
+      "subject": "dist/assets/index-d0cca72a.js#Mi",
+      "detail": "function Mi is not used from any other file"
+    },
+    {
+      "rule": "no-unused-code",
+      "path": "dist/assets/index-d0cca72a.js",
+      "subject": "dist/assets/index-d0cca72a.js#Mn",
+      "detail": "function Mn is not used from any other file"
+    },
+    {
+      "rule": "no-unused-code",
+      "path": "dist/assets/index-d0cca72a.js",
+      "subject": "dist/assets/index-d0cca72a.js#Mo",
+      "detail": "function Mo is not used from any other file"
+    },
+    {
+      "rule": "no-unused-code",
+      "path": "dist/assets/index-d0cca72a.js",
+      "subject": "dist/assets/index-d0cca72a.js#Mr",
+      "detail": "function Mr is not used from any other file"
+    },
+    {
+      "rule": "no-unused-code",
+      "path": "dist/assets/index-d0cca72a.js",
+      "subject": "dist/assets/index-d0cca72a.js#N",
+      "detail": "function N is not used from any other file"
+    },
+    {
+      "rule": "no-unused-code",
+      "path": "dist/assets/index-d0cca72a.js",
+      "subject": "dist/assets/index-d0cca72a.js#Ne",
+      "detail": "function Ne is not used from any other file"
+    },
+    {
+      "rule": "no-unused-code",
+      "path": "dist/assets/index-d0cca72a.js",
+      "subject": "dist/assets/index-d0cca72a.js#Nn",
+      "detail": "function Nn is not used from any other file"
+    },
+    {
+      "rule": "no-unused-code",
+      "path": "dist/assets/index-d0cca72a.js",
+      "subject": "dist/assets/index-d0cca72a.js#No",
+      "detail": "function No is not used from any other file"
+    },
+    {
+      "rule": "no-unused-code",
+      "path": "dist/assets/index-d0cca72a.js",
+      "subject": "dist/assets/index-d0cca72a.js#Nr",
+      "detail": "function Nr is not used from any other file"
+    },
+    {
+      "rule": "no-unused-code",
+      "path": "dist/assets/index-d0cca72a.js",
+      "subject": "dist/assets/index-d0cca72a.js#O",
+      "detail": "function O is not used from any other file"
+    },
+    {
+      "rule": "no-unused-code",
+      "path": "dist/assets/index-d0cca72a.js",
+      "subject": "dist/assets/index-d0cca72a.js#Oo",
+      "detail": "function Oo is not used from any other file"
+    },
+    {
+      "rule": "no-unused-code",
+      "path": "dist/assets/index-d0cca72a.js",
+      "subject": "dist/assets/index-d0cca72a.js#Or",
+      "detail": "function Or is not used from any other file"
+    },
+    {
+      "rule": "no-unused-code",
+      "path": "dist/assets/index-d0cca72a.js",
+      "subject": "dist/assets/index-d0cca72a.js#Ot",
+      "detail": "function Ot is not used from any other file"
+    },
+    {
+      "rule": "no-unused-code",
+      "path": "dist/assets/index-d0cca72a.js",
+      "subject": "dist/assets/index-d0cca72a.js#Pn",
+      "detail": "function Pn is not used from any other file"
+    },
+    {
+      "rule": "no-unused-code",
+      "path": "dist/assets/index-d0cca72a.js",
+      "subject": "dist/assets/index-d0cca72a.js#Po",
+      "detail": "function Po is not used from any other file"
+    },
+    {
+      "rule": "no-unused-code",
+      "path": "dist/assets/index-d0cca72a.js",
+      "subject": "dist/assets/index-d0cca72a.js#Pr",
+      "detail": "function Pr is not used from any other file"
+    },
+    {
+      "rule": "no-unused-code",
+      "path": "dist/assets/index-d0cca72a.js",
+      "subject": "dist/assets/index-d0cca72a.js#Qi",
+      "detail": "function Qi is not used from any other file"
+    },
+    {
+      "rule": "no-unused-code",
+      "path": "dist/assets/index-d0cca72a.js",
+      "subject": "dist/assets/index-d0cca72a.js#Qn",
+      "detail": "function Qn is not used from any other file"
+    },
+    {
+      "rule": "no-unused-code",
+      "path": "dist/assets/index-d0cca72a.js",
+      "subject": "dist/assets/index-d0cca72a.js#Qr",
+      "detail": "function Qr is not used from any other file"
+    },
+    {
+      "rule": "no-unused-code",
+      "path": "dist/assets/index-d0cca72a.js",
+      "subject": "dist/assets/index-d0cca72a.js#Qt",
+      "detail": "function Qt is not used from any other file"
+    },
+    {
+      "rule": "no-unused-code",
+      "path": "dist/assets/index-d0cca72a.js",
+      "subject": "dist/assets/index-d0cca72a.js#Re",
+      "detail": "function Re is not used from any other file"
+    },
+    {
+      "rule": "no-unused-code",
+      "path": "dist/assets/index-d0cca72a.js",
+      "subject": "dist/assets/index-d0cca72a.js#Ri",
+      "detail": "function Ri is not used from any other file"
+    },
+    {
+      "rule": "no-unused-code",
+      "path": "dist/assets/index-d0cca72a.js",
+      "subject": "dist/assets/index-d0cca72a.js#Rn",
+      "detail": "function Rn is not used from any other file"
+    },
+    {
+      "rule": "no-unused-code",
+      "path": "dist/assets/index-d0cca72a.js",
+      "subject": "dist/assets/index-d0cca72a.js#Ro",
+      "detail": "function Ro is not used from any other file"
+    },
+    {
+      "rule": "no-unused-code",
+      "path": "dist/assets/index-d0cca72a.js",
+      "subject": "dist/assets/index-d0cca72a.js#Rr",
+      "detail": "function Rr is not used from any other file"
+    },
+    {
+      "rule": "no-unused-code",
+      "path": "dist/assets/index-d0cca72a.js",
+      "subject": "dist/assets/index-d0cca72a.js#Rt",
+      "detail": "function Rt is not used from any other file"
+    },
+    {
+      "rule": "no-unused-code",
+      "path": "dist/assets/index-d0cca72a.js",
+      "subject": "dist/assets/index-d0cca72a.js#S",
+      "detail": "function S is not used from any other file"
+    },
+    {
+      "rule": "no-unused-code",
+      "path": "dist/assets/index-d0cca72a.js",
+      "subject": "dist/assets/index-d0cca72a.js#Si",
+      "detail": "function Si is not used from any other file"
+    },
+    {
+      "rule": "no-unused-code",
+      "path": "dist/assets/index-d0cca72a.js",
+      "subject": "dist/assets/index-d0cca72a.js#So",
+      "detail": "function So is not used from any other file"
+    },
+    {
+      "rule": "no-unused-code",
+      "path": "dist/assets/index-d0cca72a.js",
+      "subject": "dist/assets/index-d0cca72a.js#Sr",
+      "detail": "function Sr is not used from any other file"
+    },
+    {
+      "rule": "no-unused-code",
+      "path": "dist/assets/index-d0cca72a.js",
+      "subject": "dist/assets/index-d0cca72a.js#St",
+      "detail": "function St is not used from any other file"
+    },
+    {
+      "rule": "no-unused-code",
+      "path": "dist/assets/index-d0cca72a.js",
+      "subject": "dist/assets/index-d0cca72a.js#Tn",
+      "detail": "function Tn is not used from any other file"
+    },
+    {
+      "rule": "no-unused-code",
+      "path": "dist/assets/index-d0cca72a.js",
+      "subject": "dist/assets/index-d0cca72a.js#To",
+      "detail": "class To is not used from any other file"
+    },
+    {
+      "rule": "no-unused-code",
+      "path": "dist/assets/index-d0cca72a.js",
+      "subject": "dist/assets/index-d0cca72a.js#Tr",
+      "detail": "function Tr is not used from any other file"
+    },
+    {
+      "rule": "no-unused-code",
+      "path": "dist/assets/index-d0cca72a.js",
+      "subject": "dist/assets/index-d0cca72a.js#Tt",
+      "detail": "function Tt is not used from any other file"
+    },
+    {
+      "rule": "no-unused-code",
+      "path": "dist/assets/index-d0cca72a.js",
+      "subject": "dist/assets/index-d0cca72a.js#Ui",
+      "detail": "function Ui is not used from any other file"
+    },
+    {
+      "rule": "no-unused-code",
+      "path": "dist/assets/index-d0cca72a.js",
+      "subject": "dist/assets/index-d0cca72a.js#Uo",
+      "detail": "function Uo is not used from any other file"
+    },
+    {
+      "rule": "no-unused-code",
+      "path": "dist/assets/index-d0cca72a.js",
+      "subject": "dist/assets/index-d0cca72a.js#Ur",
+      "detail": "function Ur is not used from any other file"
+    },
+    {
+      "rule": "no-unused-code",
+      "path": "dist/assets/index-d0cca72a.js",
+      "subject": "dist/assets/index-d0cca72a.js#V",
+      "detail": "function V is not used from any other file"
+    },
+    {
+      "rule": "no-unused-code",
+      "path": "dist/assets/index-d0cca72a.js",
+      "subject": "dist/assets/index-d0cca72a.js#Vn",
+      "detail": "function Vn is not used from any other file"
+    },
+    {
+      "rule": "no-unused-code",
+      "path": "dist/assets/index-d0cca72a.js",
+      "subject": "dist/assets/index-d0cca72a.js#Vr",
+      "detail": "function Vr is not used from any other file"
+    },
+    {
+      "rule": "no-unused-code",
+      "path": "dist/assets/index-d0cca72a.js",
+      "subject": "dist/assets/index-d0cca72a.js#Wi",
+      "detail": "function Wi is not used from any other file"
+    },
+    {
+      "rule": "no-unused-code",
+      "path": "dist/assets/index-d0cca72a.js",
+      "subject": "dist/assets/index-d0cca72a.js#Wn",
+      "detail": "function Wn is not used from any other file"
+    },
+    {
+      "rule": "no-unused-code",
+      "path": "dist/assets/index-d0cca72a.js",
+      "subject": "dist/assets/index-d0cca72a.js#Wr",
+      "detail": "function Wr is not used from any other file"
+    },
+    {
+      "rule": "no-unused-code",
+      "path": "dist/assets/index-d0cca72a.js",
+      "subject": "dist/assets/index-d0cca72a.js#Xe",
+      "detail": "function Xe is not used from any other file"
+    },
+    {
+      "rule": "no-unused-code",
+      "path": "dist/assets/index-d0cca72a.js",
+      "subject": "dist/assets/index-d0cca72a.js#Xi",
+      "detail": "function Xi is not used from any other file"
+    },
+    {
+      "rule": "no-unused-code",
+      "path": "dist/assets/index-d0cca72a.js",
+      "subject": "dist/assets/index-d0cca72a.js#Xn",
+      "detail": "function Xn is not used from any other file"
+    },
+    {
+      "rule": "no-unused-code",
+      "path": "dist/assets/index-d0cca72a.js",
+      "subject": "dist/assets/index-d0cca72a.js#Xr",
+      "detail": "function Xr is not used from any other file"
+    },
+    {
+      "rule": "no-unused-code",
+      "path": "dist/assets/index-d0cca72a.js",
+      "subject": "dist/assets/index-d0cca72a.js#Xt",
+      "detail": "function Xt is not used from any other file"
+    },
+    {
+      "rule": "no-unused-code",
+      "path": "dist/assets/index-d0cca72a.js",
+      "subject": "dist/assets/index-d0cca72a.js#Ye",
+      "detail": "function Ye is not used from any other file"
+    },
+    {
+      "rule": "no-unused-code",
+      "path": "dist/assets/index-d0cca72a.js",
+      "subject": "dist/assets/index-d0cca72a.js#Yi",
+      "detail": "function Yi is not used from any other file"
+    },
+    {
+      "rule": "no-unused-code",
+      "path": "dist/assets/index-d0cca72a.js",
+      "subject": "dist/assets/index-d0cca72a.js#Yn",
+      "detail": "function Yn is not used from any other file"
+    },
+    {
+      "rule": "no-unused-code",
+      "path": "dist/assets/index-d0cca72a.js",
+      "subject": "dist/assets/index-d0cca72a.js#Yr",
+      "detail": "function Yr is not used from any other file"
+    },
+    {
+      "rule": "no-unused-code",
+      "path": "dist/assets/index-d0cca72a.js",
+      "subject": "dist/assets/index-d0cca72a.js#Zi",
+      "detail": "function Zi is not used from any other file"
+    },
+    {
+      "rule": "no-unused-code",
+      "path": "dist/assets/index-d0cca72a.js",
+      "subject": "dist/assets/index-d0cca72a.js#Zr",
+      "detail": "function Zr is not used from any other file"
+    },
+    {
+      "rule": "no-unused-code",
+      "path": "dist/assets/index-d0cca72a.js",
+      "subject": "dist/assets/index-d0cca72a.js#_e",
+      "detail": "function _e is not used from any other file"
+    },
+    {
+      "rule": "no-unused-code",
+      "path": "dist/assets/index-d0cca72a.js",
+      "subject": "dist/assets/index-d0cca72a.js#_i",
+      "detail": "function _i is not used from any other file"
+    },
+    {
+      "rule": "no-unused-code",
+      "path": "dist/assets/index-d0cca72a.js",
+      "subject": "dist/assets/index-d0cca72a.js#_t",
+      "detail": "function _t is not used from any other file"
+    },
+    {
+      "rule": "no-unused-code",
+      "path": "dist/assets/index-d0cca72a.js",
+      "subject": "dist/assets/index-d0cca72a.js#ae",
+      "detail": "function ae is not used from any other file"
+    },
+    {
+      "rule": "no-unused-code",
+      "path": "dist/assets/index-d0cca72a.js",
+      "subject": "dist/assets/index-d0cca72a.js#ai",
+      "detail": "function ai is not used from any other file"
+    },
+    {
+      "rule": "no-unused-code",
+      "path": "dist/assets/index-d0cca72a.js",
+      "subject": "dist/assets/index-d0cca72a.js#at",
+      "detail": "function at is not used from any other file"
+    },
+    {
+      "rule": "no-unused-code",
+      "path": "dist/assets/index-d0cca72a.js",
+      "subject": "dist/assets/index-d0cca72a.js#b",
+      "detail": "function b is not used from any other file"
+    },
+    {
+      "rule": "no-unused-code",
+      "path": "dist/assets/index-d0cca72a.js",
+      "subject": "dist/assets/index-d0cca72a.js#be",
+      "detail": "function be is not used from any other file"
+    },
+    {
+      "rule": "no-unused-code",
+      "path": "dist/assets/index-d0cca72a.js",
+      "subject": "dist/assets/index-d0cca72a.js#bi",
+      "detail": "function bi is not used from any other file"
+    },
+    {
+      "rule": "no-unused-code",
+      "path": "dist/assets/index-d0cca72a.js",
+      "subject": "dist/assets/index-d0cca72a.js#bo",
+      "detail": "function bo is not used from any other file"
+    },
+    {
+      "rule": "no-unused-code",
+      "path": "dist/assets/index-d0cca72a.js",
+      "subject": "dist/assets/index-d0cca72a.js#ce",
+      "detail": "function ce is not used from any other file"
+    },
+    {
+      "rule": "no-unused-code",
+      "path": "dist/assets/index-d0cca72a.js",
+      "subject": "dist/assets/index-d0cca72a.js#ci",
+      "detail": "function ci is not used from any other file"
+    },
+    {
+      "rule": "no-unused-code",
+      "path": "dist/assets/index-d0cca72a.js",
+      "subject": "dist/assets/index-d0cca72a.js#cn",
+      "detail": "function cn is not used from any other file"
+    },
+    {
+      "rule": "no-unused-code",
+      "path": "dist/assets/index-d0cca72a.js",
+      "subject": "dist/assets/index-d0cca72a.js#co",
+      "detail": "function co is not used from any other file"
+    },
+    {
+      "rule": "no-unused-code",
+      "path": "dist/assets/index-d0cca72a.js",
+      "subject": "dist/assets/index-d0cca72a.js#ct",
+      "detail": "function ct is not used from any other file"
+    },
+    {
+      "rule": "no-unused-code",
+      "path": "dist/assets/index-d0cca72a.js",
+      "subject": "dist/assets/index-d0cca72a.js#di",
+      "detail": "function di is not used from any other file"
+    },
+    {
+      "rule": "no-unused-code",
+      "path": "dist/assets/index-d0cca72a.js",
+      "subject": "dist/assets/index-d0cca72a.js#dn",
+      "detail": "function dn is not used from any other file"
+    },
+    {
+      "rule": "no-unused-code",
+      "path": "dist/assets/index-d0cca72a.js",
+      "subject": "dist/assets/index-d0cca72a.js#dr",
+      "detail": "function dr is not used from any other file"
+    },
+    {
+      "rule": "no-unused-code",
+      "path": "dist/assets/index-d0cca72a.js",
+      "subject": "dist/assets/index-d0cca72a.js#dt",
+      "detail": "function dt is not used from any other file"
+    },
+    {
+      "rule": "no-unused-code",
+      "path": "dist/assets/index-d0cca72a.js",
+      "subject": "dist/assets/index-d0cca72a.js#ei",
+      "detail": "function ei is not used from any other file"
+    },
+    {
+      "rule": "no-unused-code",
+      "path": "dist/assets/index-d0cca72a.js",
+      "subject": "dist/assets/index-d0cca72a.js#en",
+      "detail": "function en is not used from any other file"
+    },
+    {
+      "rule": "no-unused-code",
+      "path": "dist/assets/index-d0cca72a.js",
+      "subject": "dist/assets/index-d0cca72a.js#er",
+      "detail": "function er is not used from any other file"
+    },
+    {
+      "rule": "no-unused-code",
+      "path": "dist/assets/index-d0cca72a.js",
+      "subject": "dist/assets/index-d0cca72a.js#es",
+      "detail": "class es is not used from any other file"
+    },
+    {
+      "rule": "no-unused-code",
+      "path": "dist/assets/index-d0cca72a.js",
+      "subject": "dist/assets/index-d0cca72a.js#et",
+      "detail": "function et is not used from any other file"
+    },
+    {
+      "rule": "no-unused-code",
+      "path": "dist/assets/index-d0cca72a.js",
+      "subject": "dist/assets/index-d0cca72a.js#fe",
+      "detail": "function fe is not used from any other file"
+    },
+    {
+      "rule": "no-unused-code",
+      "path": "dist/assets/index-d0cca72a.js",
+      "subject": "dist/assets/index-d0cca72a.js#fi",
+      "detail": "function fi is not used from any other file"
+    },
+    {
+      "rule": "no-unused-code",
+      "path": "dist/assets/index-d0cca72a.js",
+      "subject": "dist/assets/index-d0cca72a.js#fn",
+      "detail": "function fn is not used from any other file"
+    },
+    {
+      "rule": "no-unused-code",
+      "path": "dist/assets/index-d0cca72a.js",
+      "subject": "dist/assets/index-d0cca72a.js#fo",
+      "detail": "function fo is not used from any other file"
+    },
+    {
+      "rule": "no-unused-code",
+      "path": "dist/assets/index-d0cca72a.js",
+      "subject": "dist/assets/index-d0cca72a.js#g",
+      "detail": "function g is not used from any other file"
+    },
+    {
+      "rule": "no-unused-code",
+      "path": "dist/assets/index-d0cca72a.js",
+      "subject": "dist/assets/index-d0cca72a.js#ge",
+      "detail": "function ge is not used from any other file"
+    },
+    {
+      "rule": "no-unused-code",
+      "path": "dist/assets/index-d0cca72a.js",
+      "subject": "dist/assets/index-d0cca72a.js#gi",
+      "detail": "function gi is not used from any other file"
+    },
+    {
+      "rule": "no-unused-code",
+      "path": "dist/assets/index-d0cca72a.js",
+      "subject": "dist/assets/index-d0cca72a.js#gn",
+      "detail": "function gn is not used from any other file"
+    },
+    {
+      "rule": "no-unused-code",
+      "path": "dist/assets/index-d0cca72a.js",
+      "subject": "dist/assets/index-d0cca72a.js#go",
+      "detail": "function go is not used from any other file"
+    },
+    {
+      "rule": "no-unused-code",
+      "path": "dist/assets/index-d0cca72a.js",
+      "subject": "dist/assets/index-d0cca72a.js#he",
+      "detail": "function he is not used from any other file"
+    },
+    {
+      "rule": "no-unused-code",
+      "path": "dist/assets/index-d0cca72a.js",
+      "subject": "dist/assets/index-d0cca72a.js#hi",
+      "detail": "function hi is not used from any other file"
+    },
+    {
+      "rule": "no-unused-code",
+      "path": "dist/assets/index-d0cca72a.js",
+      "subject": "dist/assets/index-d0cca72a.js#hn",
+      "detail": "function hn is not used from any other file"
+    },
+    {
+      "rule": "no-unused-code",
+      "path": "dist/assets/index-d0cca72a.js",
+      "subject": "dist/assets/index-d0cca72a.js#ho",
+      "detail": "function ho is not used from any other file"
+    },
+    {
+      "rule": "no-unused-code",
+      "path": "dist/assets/index-d0cca72a.js",
+      "subject": "dist/assets/index-d0cca72a.js#ie",
+      "detail": "function ie is not used from any other file"
+    },
+    {
+      "rule": "no-unused-code",
+      "path": "dist/assets/index-d0cca72a.js",
+      "subject": "dist/assets/index-d0cca72a.js#ii",
+      "detail": "function ii is not used from any other file"
+    },
+    {
+      "rule": "no-unused-code",
+      "path": "dist/assets/index-d0cca72a.js",
+      "subject": "dist/assets/index-d0cca72a.js#jn",
+      "detail": "function jn is not used from any other file"
+    },
+    {
+      "rule": "no-unused-code",
+      "path": "dist/assets/index-d0cca72a.js",
+      "subject": "dist/assets/index-d0cca72a.js#jo",
+      "detail": "function jo is not used from any other file"
+    },
+    {
+      "rule": "no-unused-code",
+      "path": "dist/assets/index-d0cca72a.js",
+      "subject": "dist/assets/index-d0cca72a.js#jt",
+      "detail": "function jt is not used from any other file"
+    },
+    {
+      "rule": "no-unused-code",
+      "path": "dist/assets/index-d0cca72a.js",
+      "subject": "dist/assets/index-d0cca72a.js#ki",
+      "detail": "function ki is not used from any other file"
+    },
+    {
+      "rule": "no-unused-code",
+      "path": "dist/assets/index-d0cca72a.js",
+      "subject": "dist/assets/index-d0cca72a.js#kn",
+      "detail": "function kn is not used from any other file"
+    },
+    {
+      "rule": "no-unused-code",
+      "path": "dist/assets/index-d0cca72a.js",
+      "subject": "dist/assets/index-d0cca72a.js#ko",
+      "detail": "function ko is not used from any other file"
+    },
+    {
+      "rule": "no-unused-code",
+      "path": "dist/assets/index-d0cca72a.js",
+      "subject": "dist/assets/index-d0cca72a.js#kr",
+      "detail": "function kr is not used from any other file"
+    },
+    {
+      "rule": "no-unused-code",
+      "path": "dist/assets/index-d0cca72a.js",
+      "subject": "dist/assets/index-d0cca72a.js#kt",
+      "detail": "function kt is not used from any other file"
+    },
+    {
+      "rule": "no-unused-code",
+      "path": "dist/assets/index-d0cca72a.js",
+      "subject": "dist/assets/index-d0cca72a.js#li",
+      "detail": "function li is not used from any other file"
+    },
+    {
+      "rule": "no-unused-code",
+      "path": "dist/assets/index-d0cca72a.js",
+      "subject": "dist/assets/index-d0cca72a.js#ln",
+      "detail": "function ln is not used from any other file"
+    },
+    {
+      "rule": "no-unused-code",
+      "path": "dist/assets/index-d0cca72a.js",
+      "subject": "dist/assets/index-d0cca72a.js#lo",
+      "detail": "function lo is not used from any other file"
+    },
+    {
+      "rule": "no-unused-code",
+      "path": "dist/assets/index-d0cca72a.js",
+      "subject": "dist/assets/index-d0cca72a.js#me",
+      "detail": "function me is not used from any other file"
+    },
+    {
+      "rule": "no-unused-code",
+      "path": "dist/assets/index-d0cca72a.js",
+      "subject": "dist/assets/index-d0cca72a.js#mi",
+      "detail": "function mi is not used from any other file"
+    },
+    {
+      "rule": "no-unused-code",
+      "path": "dist/assets/index-d0cca72a.js",
+      "subject": "dist/assets/index-d0cca72a.js#mo",
+      "detail": "function mo is not used from any other file"
+    },
+    {
+      "rule": "no-unused-code",
+      "path": "dist/assets/index-d0cca72a.js",
+      "subject": "dist/assets/index-d0cca72a.js#mt",
+      "detail": "function mt is not used from any other file"
+    },
+    {
+      "rule": "no-unused-code",
+      "path": "dist/assets/index-d0cca72a.js",
+      "subject": "dist/assets/index-d0cca72a.js#ni",
+      "detail": "function ni is not used from any other file"
+    },
+    {
+      "rule": "no-unused-code",
+      "path": "dist/assets/index-d0cca72a.js",
+      "subject": "dist/assets/index-d0cca72a.js#nn",
+      "detail": "function nn is not used from any other file"
+    },
+    {
+      "rule": "no-unused-code",
+      "path": "dist/assets/index-d0cca72a.js",
+      "subject": "dist/assets/index-d0cca72a.js#nr",
+      "detail": "function nr is not used from any other file"
+    },
+    {
+      "rule": "no-unused-code",
+      "path": "dist/assets/index-d0cca72a.js",
+      "subject": "dist/assets/index-d0cca72a.js#oi",
+      "detail": "function oi is not used from any other file"
+    },
+    {
+      "rule": "no-unused-code",
+      "path": "dist/assets/index-d0cca72a.js",
+      "subject": "dist/assets/index-d0cca72a.js#or",
+      "detail": "function or is not used from any other file"
+    },
+    {
+      "rule": "no-unused-code",
+      "path": "dist/assets/index-d0cca72a.js",
+      "subject": "dist/assets/index-d0cca72a.js#pe",
+      "detail": "function pe is not used from any other file"
+    },
+    {
+      "rule": "no-unused-code",
+      "path": "dist/assets/index-d0cca72a.js",
+      "subject": "dist/assets/index-d0cca72a.js#pi",
+      "detail": "function pi is not used from any other file"
+    },
+    {
+      "rule": "no-unused-code",
+      "path": "dist/assets/index-d0cca72a.js",
+      "subject": "dist/assets/index-d0cca72a.js#pn",
+      "detail": "function pn is not used from any other file"
+    },
+    {
+      "rule": "no-unused-code",
+      "path": "dist/assets/index-d0cca72a.js",
+      "subject": "dist/assets/index-d0cca72a.js#po",
+      "detail": "function po is not used from any other file"
+    },
+    {
+      "rule": "no-unused-code",
+      "path": "dist/assets/index-d0cca72a.js",
+      "subject": "dist/assets/index-d0cca72a.js#pt",
+      "detail": "function pt is not used from any other file"
+    },
+    {
+      "rule": "no-unused-code",
+      "path": "dist/assets/index-d0cca72a.js",
+      "subject": "dist/assets/index-d0cca72a.js#q",
+      "detail": "function q is not used from any other file"
+    },
+    {
+      "rule": "no-unused-code",
+      "path": "dist/assets/index-d0cca72a.js",
+      "subject": "dist/assets/index-d0cca72a.js#qe",
+      "detail": "function qe is not used from any other file"
+    },
+    {
+      "rule": "no-unused-code",
+      "path": "dist/assets/index-d0cca72a.js",
+      "subject": "dist/assets/index-d0cca72a.js#qi",
+      "detail": "function qi is not used from any other file"
+    },
+    {
+      "rule": "no-unused-code",
+      "path": "dist/assets/index-d0cca72a.js",
+      "subject": "dist/assets/index-d0cca72a.js#qn",
+      "detail": "function qn is not used from any other file"
+    },
+    {
+      "rule": "no-unused-code",
+      "path": "dist/assets/index-d0cca72a.js",
+      "subject": "dist/assets/index-d0cca72a.js#qo",
+      "detail": "function qo is not used from any other file"
+    },
+    {
+      "rule": "no-unused-code",
+      "path": "dist/assets/index-d0cca72a.js",
+      "subject": "dist/assets/index-d0cca72a.js#qr",
+      "detail": "function qr is not used from any other file"
+    },
+    {
+      "rule": "no-unused-code",
+      "path": "dist/assets/index-d0cca72a.js",
+      "subject": "dist/assets/index-d0cca72a.js#ri",
+      "detail": "function ri is not used from any other file"
+    },
+    {
+      "rule": "no-unused-code",
+      "path": "dist/assets/index-d0cca72a.js",
+      "subject": "dist/assets/index-d0cca72a.js#si",
+      "detail": "function si is not used from any other file"
+    },
+    {
+      "rule": "no-unused-code",
+      "path": "dist/assets/index-d0cca72a.js",
+      "subject": "dist/assets/index-d0cca72a.js#st",
+      "detail": "function st is not used from any other file"
+    },
+    {
+      "rule": "no-unused-code",
+      "path": "dist/assets/index-d0cca72a.js",
+      "subject": "dist/assets/index-d0cca72a.js#te",
+      "detail": "function te is not used from any other file"
+    },
+    {
+      "rule": "no-unused-code",
+      "path": "dist/assets/index-d0cca72a.js",
+      "subject": "dist/assets/index-d0cca72a.js#ti",
+      "detail": "function ti is not used from any other file"
+    },
+    {
+      "rule": "no-unused-code",
+      "path": "dist/assets/index-d0cca72a.js",
+      "subject": "dist/assets/index-d0cca72a.js#tn",
+      "detail": "function tn is not used from any other file"
+    },
+    {
+      "rule": "no-unused-code",
+      "path": "dist/assets/index-d0cca72a.js",
+      "subject": "dist/assets/index-d0cca72a.js#tr",
+      "detail": "function tr is not used from any other file"
+    },
+    {
+      "rule": "no-unused-code",
+      "path": "dist/assets/index-d0cca72a.js",
+      "subject": "dist/assets/index-d0cca72a.js#ts",
+      "detail": "function ts is not used from any other file"
+    },
+    {
+      "rule": "no-unused-code",
+      "path": "dist/assets/index-d0cca72a.js",
+      "subject": "dist/assets/index-d0cca72a.js#tt",
+      "detail": "function tt is not used from any other file"
+    },
+    {
+      "rule": "no-unused-code",
+      "path": "dist/assets/index-d0cca72a.js",
+      "subject": "dist/assets/index-d0cca72a.js#ue",
+      "detail": "function ue is not used from any other file"
+    },
+    {
+      "rule": "no-unused-code",
+      "path": "dist/assets/index-d0cca72a.js",
+      "subject": "dist/assets/index-d0cca72a.js#ui",
+      "detail": "function ui is not used from any other file"
+    },
+    {
+      "rule": "no-unused-code",
+      "path": "dist/assets/index-d0cca72a.js",
+      "subject": "dist/assets/index-d0cca72a.js#un",
+      "detail": "function un is not used from any other file"
+    },
+    {
+      "rule": "no-unused-code",
+      "path": "dist/assets/index-d0cca72a.js",
+      "subject": "dist/assets/index-d0cca72a.js#uo",
+      "detail": "function uo is not used from any other file"
+    },
+    {
+      "rule": "no-unused-code",
+      "path": "dist/assets/index-d0cca72a.js",
+      "subject": "dist/assets/index-d0cca72a.js#ve",
+      "detail": "function ve is not used from any other file"
+    },
+    {
+      "rule": "no-unused-code",
+      "path": "dist/assets/index-d0cca72a.js",
+      "subject": "dist/assets/index-d0cca72a.js#vi",
+      "detail": "function vi is not used from any other file"
+    },
+    {
+      "rule": "no-unused-code",
+      "path": "dist/assets/index-d0cca72a.js",
+      "subject": "dist/assets/index-d0cca72a.js#vo",
+      "detail": "function vo is not used from any other file"
+    },
+    {
+      "rule": "no-unused-code",
+      "path": "dist/assets/index-d0cca72a.js",
+      "subject": "dist/assets/index-d0cca72a.js#vr",
+      "detail": "function vr is not used from any other file"
+    },
+    {
+      "rule": "no-unused-code",
+      "path": "dist/assets/index-d0cca72a.js",
+      "subject": "dist/assets/index-d0cca72a.js#wi",
+      "detail": "function wi is not used from any other file"
+    },
+    {
+      "rule": "no-unused-code",
+      "path": "dist/assets/index-d0cca72a.js",
+      "subject": "dist/assets/index-d0cca72a.js#wn",
+      "detail": "function wn is not used from any other file"
+    },
+    {
+      "rule": "no-unused-code",
+      "path": "dist/assets/index-d0cca72a.js",
+      "subject": "dist/assets/index-d0cca72a.js#wo",
+      "detail": "function wo is not used from any other file"
+    },
+    {
+      "rule": "no-unused-code",
+      "path": "dist/assets/index-d0cca72a.js",
+      "subject": "dist/assets/index-d0cca72a.js#wt",
+      "detail": "function wt is not used from any other file"
+    },
+    {
+      "rule": "no-unused-code",
+      "path": "dist/assets/index-d0cca72a.js",
+      "subject": "dist/assets/index-d0cca72a.js#x",
+      "detail": "function x is not used from any other file"
+    },
+    {
+      "rule": "no-unused-code",
+      "path": "dist/assets/index-d0cca72a.js",
+      "subject": "dist/assets/index-d0cca72a.js#xi",
+      "detail": "function xi is not used from any other file"
+    },
+    {
+      "rule": "no-unused-code",
+      "path": "dist/assets/index-d0cca72a.js",
+      "subject": "dist/assets/index-d0cca72a.js#xn",
+      "detail": "function xn is not used from any other file"
+    },
+    {
+      "rule": "no-unused-code",
+      "path": "dist/assets/index-d0cca72a.js",
+      "subject": "dist/assets/index-d0cca72a.js#xo",
+      "detail": "function xo is not used from any other file"
+    },
+    {
+      "rule": "no-unused-code",
+      "path": "dist/assets/index-d0cca72a.js",
+      "subject": "dist/assets/index-d0cca72a.js#yi",
+      "detail": "function yi is not used from any other file"
+    },
+    {
+      "rule": "no-unused-code",
+      "path": "dist/assets/index-d0cca72a.js",
+      "subject": "dist/assets/index-d0cca72a.js#yn",
+      "detail": "function yn is not used from any other file"
+    },
+    {
+      "rule": "no-unused-code",
+      "path": "dist/assets/index-d0cca72a.js",
+      "subject": "dist/assets/index-d0cca72a.js#yo",
+      "detail": "function yo is not used from any other file"
+    },
+    {
+      "rule": "no-unused-code",
+      "path": "dist/assets/index-d0cca72a.js",
+      "subject": "dist/assets/index-d0cca72a.js#ze",
+      "detail": "function ze is not used from any other file"
+    },
+    {
+      "rule": "no-unused-code",
+      "path": "dist/assets/index-d0cca72a.js",
+      "subject": "dist/assets/index-d0cca72a.js#zo",
+      "detail": "function zo is not used from any other file"
+    },
+    {
+      "rule": "no-unused-code",
+      "path": "dist/assets/index-d0cca72a.js",
+      "subject": "dist/assets/index-d0cca72a.js#zr",
+      "detail": "function zr is not used from any other file"
+    },
+    {
+      "rule": "no-unused-code",
+      "path": "dist/assets/index-d0cca72a.js",
+      "subject": "dist/assets/index-d0cca72a.js#zt",
+      "detail": "function zt is not used from any other file"
+    },
+    {
+      "rule": "no-unused-code",
+      "path": "src/javascripts/main_.js",
+      "subject": "src/javascripts/main_.js#CalculateVh",
+      "detail": "function CalculateVh is not used from any other file"
+    },
+    {
+      "rule": "no-unused-code",
+      "path": "src/javascripts/main_.js",
+      "subject": "src/javascripts/main_.js#ChangeScale",
+      "detail": "function ChangeScale is not used from any other file"
+    },
+    {
+      "rule": "no-unused-code",
+      "path": "src/javascripts/main_.js",
+      "subject": "src/javascripts/main_.js#CheckComplete",
+      "detail": "function CheckComplete is not used from any other file"
+    },
+    {
+      "rule": "no-unused-code",
+      "path": "src/javascripts/main_.js",
+      "subject": "src/javascripts/main_.js#CreateImage",
+      "detail": "function CreateImage is not used from any other file"
+    },
+    {
+      "rule": "no-unused-code",
+      "path": "src/javascripts/main_.js",
+      "subject": "src/javascripts/main_.js#Fragment",
+      "detail": "class Fragment is not used from any other file"
+    },
+    {
+      "rule": "no-unused-code",
+      "path": "src/javascripts/main_.js",
+      "subject": "src/javascripts/main_.js#Jumble",
+      "detail": "function Jumble is not used from any other file"
+    },
+    {
+      "rule": "no-unused-code",
+      "path": "src/javascripts/main_.js",
+      "subject": "src/javascripts/main_.js#LoadFiles",
+      "detail": "function LoadFiles is not used from any other file"
+    },
+    {
+      "rule": "no-unused-code",
+      "path": "src/javascripts/main_.js",
+      "subject": "src/javascripts/main_.js#ReLoad",
+      "detail": "function ReLoad is not used from any other file"
+    },
+    {
+      "rule": "no-unused-code",
+      "path": "src/javascripts/main_.js",
+      "subject": "src/javascripts/main_.js#SwitchImage",
+      "detail": "function SwitchImage is not used from any other file"
+    },
+    {
+      "rule": "no-unused-code",
+      "path": "src/javascripts/main_.js",
+      "subject": "src/javascripts/main_.js#ToggleOriginal",
+      "detail": "function ToggleOriginal is not used from any other file"
+    },
+    {
+      "rule": "no-unused-code",
+      "path": "src/javascripts/main_.js",
+      "subject": "src/javascripts/main_.js#ToggleSettings",
+      "detail": "function ToggleSettings is not used from any other file"
+    }
+  ]
+}

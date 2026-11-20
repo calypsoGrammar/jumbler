@@ -13,6 +13,9 @@ permissions:
 
 jobs:
   build:
+    # Archon's own pull requests are verified on the droplet before they are published
+    # (archon.verify posts this check's status); this job runs on main and on people's pull requests.
+    if: github.event_name != 'pull_request' || !startsWith(github.head_ref, 'archon/')
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
