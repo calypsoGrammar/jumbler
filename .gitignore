@@ -22,3 +22,8 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# Spiderweb: the index is local; the rules and baseline are committed.
+/.spiderweb/*
+!/.spiderweb/verify.json
+!/.spiderweb/verify-baseline.json
