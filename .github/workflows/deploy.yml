@@ -1,6 +1,6 @@
 name: deploy
 
-# This site's deploy: the shared GitHub Pages workflow in calypsoGrammar/deploy-workflows (README there).
+# This site's deploy: the shared Cloudflare Pages workflow in calypsoGrammar/deploy-workflows (README there).
 # Actions → deploy → Run workflow (a dry run unless unticked). An earlier `ref` rolls back; tick `rollback`
 # with no ref to go back to the `stable` tag, which also holds publishing until cleared.
 
@@ -29,12 +29,10 @@ permissions:
   contents: write
   checks: read
   deployments: write
-  pages: write
-  id-token: write
 
 jobs:
   deploy:
-    uses: calypsoGrammar/deploy-workflows/.github/workflows/github-pages.yml@v1
+    uses: calypsoGrammar/deploy-workflows/.github/workflows/cloudflare-pages.yml@v1
     with:
       target: ${{ inputs.target }}
       ref: ${{ inputs.ref }}
@@ -43,7 +41,12 @@ jobs:
       # The check runs that must have passed on the commit (the job names in CI).
       required_checks: |
         build
+      project_name: jumbler
+      site_url: https://jumbler.calypsogrammar.com
+      # Served at the root of its own subdomain, so the build's base is / (vite.config.js keeps the old
+      # GitHub Pages path for local checks).
       build_command: |
         npm ci --no-audit --no-fund
-        npm run build
-      site_path: dist
+        npm run build -- --base=/
+    secrets:
+      CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
