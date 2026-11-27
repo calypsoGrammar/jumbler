@@ -1,6 +1,9 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { readFile } from 'node:fs/promises';
+import { access, mkdtemp, readFile, rm } from 'node:fs/promises';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
+import { build } from 'vite';
 
 import { PointerSwapSession } from '../src/javascripts/puzzle-coordinates.js';
 import {
@@ -395,5 +398,25 @@ test('documented safety limits stay synchronized with the enforced constants', a
   for(const limit of [MAX_CANVAS_DIMENSION, MAX_CANVAS_PIXELS, MAX_TILES_PER_AXIS, MAX_PUZZLE_TILES])
   {
     assert.match(readme, new RegExp(limit.toLocaleString('en-US')));
+  }
+});
+
+test('the production page references only local assets served from the site root', async () => {
+  const outDir = await mkdtemp(join(tmpdir(), 'jumbler-build-'));
+  try
+  {
+    await build({ logLevel: 'silent', build: { outDir, emptyOutDir: true } });
+    const productionPage = await readFile(join(outDir, 'index.html'), 'utf8');
+    const references = Array.from(productionPage.matchAll(/(?:href|src)="([^"?]+)"/g), match => match[1])
+      .filter(reference => !/^https?:/.test(reference));
+
+    assert.ok(references.some(reference => reference.endsWith('.js')));
+    assert.ok(references.some(reference => reference.endsWith('.css')));
+    for(const reference of references) assert.match(reference, /^\/assets\//);
+    await Promise.all(references.map(reference => access(join(outDir, reference))));
+  }
+  finally
+  {
+    await rm(outDir, { recursive: true, force: true });
   }
 });
