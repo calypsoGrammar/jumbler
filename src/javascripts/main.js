@@ -4,6 +4,7 @@ import svg from './svg.js';
 import { imageDimensions } from './image-dimensions.js';
 import Alpine from 'alpinejs';
 import { canvasPointFromClient, PointerSwapSession } from './puzzle-coordinates.js';
+import { KeyboardSwapSession, tileLabel } from './puzzle-keyboard.js';
 import {
   applyPuzzleResize,
   attemptPuzzleScale,
@@ -21,6 +22,7 @@ const MAX_LIBRARY_IMAGES = 8;
 const MAX_IMAGE_DIMENSION = 4096;
 const MAX_IMAGE_PIXELS = 8_388_608;
 const MAX_LIBRARY_PIXELS = 16_777_216;
+const NAVIGATION_KEYS = new Set(['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown', 'Home', 'End']);
 
 function readFile(file)
 {
@@ -60,6 +62,7 @@ const SELECT = document.getElementById("SELECT");
 const IMPORT = document.getElementById("IMPORT");
 const LOAD = document.getElementById("LOAD");
 const STATUS = document.getElementById("STATUS");
+const PUZZLE_STATUS = document.getElementById("PUZZLE_STATUS");
 
 ORIGINAL.innerHTML = svg.eye.trim();
 JUMBLE.innerHTML = svg.dice.trim();
@@ -69,6 +72,7 @@ DOWN.innerHTML = svg.down.trim();
 
 THEME.innerHTML = svg.theme.trim();
 
+const BOARD = document.getElementById("BOARD");
 const CANVAS = document.getElementById("CANVAS");
 const c = CANVAS.getContext("2d");
 
@@ -100,6 +104,9 @@ class Jumbler
     this.tH = 0;
     this.total = 0;
     this.pointerSession = new PointerSwapSession();
+    this.keyboardSession = new KeyboardSwapSession();
+    this.keyboard_cursor = false;
+    this.completed_percent = null;
 
     this.scale = 0.6;
     this.original = [];
@@ -122,11 +129,14 @@ class Jumbler
   toggle_dark()
   {
     this.dark = !this.dark;
+    THEME.setAttribute('aria-pressed', String(this.dark));
+    this.update_menus();
     this.draw();
   }
 
   update_menus()
   {
+    document.documentElement.dataset.theme = this.dark ? 'dark' : 'light';
     if(this.dark)
     {
       document.body.classList.remove('bg-mod_light');
@@ -272,6 +282,7 @@ class Jumbler
       this.playing = false;
       this.pointerSession.clear();
       STATUS.textContent = '';
+      this.announce('Puzzle ready. Showing the original image; jumble the tiles to play.');
     }
   }
 
@@ -337,9 +348,19 @@ class Jumbler
       return false;
     }
 
-    this.show_original = true;
-    ORIGINAL.style.transform = 'rotate(90deg)';
+    this.keyboardSession.reset();
+    this.completed_percent = null;
+    COMPLETED.textContent = '';
+    this.set_show_original(true);
+    if(document.activeElement === CANVAS) this.draw();
     return true;
+  }
+
+  set_show_original(show)
+  {
+    this.show_original = show;
+    ORIGINAL.style.transform = show ? 'rotate(90deg)' : '';
+    ORIGINAL.setAttribute('aria-pressed', String(show));
   }
 
   draw()
@@ -352,6 +373,106 @@ class Jumbler
     {
       drawPuzzleFragments(c, this.fragments, () => document.createElement('canvas'));
     }
+    if(this.cursor_visible()) this.draw_cursor();
+  }
+
+  // The tile cursor shows while the canvas has keyboard focus, not after a
+  // pointer press focuses it.
+  cursor_visible()
+  {
+    return document.activeElement === CANVAS && (this.keyboard_cursor || CANVAS.matches(':focus-visible'));
+  }
+
+  draw_cursor()
+  {
+    const { cursor, selected } = this.keyboardSession;
+    const selectedTile = selected === null ? null : this.fragments[selected];
+    const cursorTile = this.fragments[cursor];
+
+    if(selectedTile && selected !== cursor) this.outline_tile(selectedTile, true, false);
+    if(cursorTile) this.outline_tile(cursorTile, selected === cursor, true);
+  }
+
+  outline_tile(tile, selected, current)
+  {
+    // Dark and light strokes together stay visible over any image.
+    const line = Math.max(1, Math.min(4, Math.floor(Math.min(tile.width, tile.height) / 8)));
+    c.save();
+    if(selected)
+    {
+      c.fillStyle = 'rgba(255, 214, 10, 0.4)';
+      c.fillRect(tile.x, tile.y, tile.width, tile.height);
+    }
+    c.lineWidth = line * 2;
+    c.strokeStyle = 'rgb(0, 0, 0)';
+    c.strokeRect(tile.x + line, tile.y + line, tile.width - line * 2, tile.height - line * 2);
+    c.lineWidth = line;
+    c.strokeStyle = current ? 'rgb(255, 255, 255)' : 'rgb(255, 214, 10)';
+    if(!current) c.setLineDash([line * 3, line * 2]);
+    c.strokeRect(tile.x + line, tile.y + line, tile.width - line * 2, tile.height - line * 2);
+    c.restore();
+  }
+
+  announce(message)
+  {
+    PUZZLE_STATUS.textContent = message;
+  }
+
+  key_down(key)
+  {
+    const across = Number(this.stored_columns);
+    const down = Number(this.stored_rows);
+    const keys = this.keyboardSession;
+    const isActivate = key === 'Enter' || key === ' ';
+    if(!isActivate && key !== 'Escape' && !NAVIGATION_KEYS.has(key)) return false;
+    this.keyboard_cursor = true;
+
+    if(this.fragments.length === 0)
+    {
+      this.announce('No puzzle yet. Import an image and press play in the settings.');
+      return true;
+    }
+
+    if(key === 'Escape')
+    {
+      if(keys.cancel())
+      {
+        this.draw();
+        this.announce('Selection cancelled.');
+      }
+      return true;
+    }
+
+    if(!isActivate)
+    {
+      keys.move(key, across, down);
+      this.draw();
+      const selected = keys.selected === keys.cursor ? ', selected' : '';
+      this.announce(`${tileLabel(keys.cursor, across)}${selected}.`);
+      return true;
+    }
+
+    if(this.show_original === true)
+    {
+      this.announce('Showing the original image. Turn off Show original image, or jumble the tiles, to swap tiles.');
+      return true;
+    }
+
+    const result = keys.activate(this.fragments);
+    this.draw();
+    if(result.action === 'selected')
+    {
+      this.announce(`Selected ${tileLabel(result.first, across)}. Move to another tile and press Enter or Space to swap.`);
+    }
+    else if(result.action === 'deselected')
+    {
+      this.announce(`Deselected ${tileLabel(result.first, across)}.`);
+    }
+    else if(result.action === 'swapped')
+    {
+      this.complete(`Swapped ${tileLabel(result.first, across)} with ${tileLabel(result.second, across)}.`);
+    }
+    return true;
   }
 
   jumble()
@@ -378,31 +499,39 @@ class Jumbler
       this.fragments[i].frag = tempImg[i];
     }
     
-    this.show_original = false;
-    ORIGINAL.style.transform = '';
+    this.set_show_original(false);
+    this.keyboardSession.cancel();
+    this.completed_percent = null;
     this.draw();
     this.playing = true;
-    this.complete();
+    this.complete('Tiles jumbled.');
   }
 
   is_original()
   {
     if(this.uploaded_files.length == 0) return;
-    this.show_original = !this.show_original;
-    if(this.show_original === true) ORIGINAL.style.transform = 'rotate(90deg)';
-    else ORIGINAL.style.transform = '';
+    this.set_show_original(!this.show_original);
     this.draw();
   }
 
-  complete()
+  // Announces the action, plus the completion percentage only when it changed.
+  complete(action = '')
   {
     const percent = puzzleCompletionPercent(this.fragments, this.original);
-    COMPLETED.innerHTML = percent.toString() + "%";
-    if(percent === 100)
+    COMPLETED.textContent = percent.toString() + "%";
+    let progress = '';
+    if(percent === 100 && this.playing)
     {
-      window.alert('well done xd');
+      progress = 'Puzzle complete. Well done!';
       this.playing = false;
     }
+    else if(percent !== this.completed_percent)
+    {
+      progress = `${percent}% complete.`;
+    }
+    this.completed_percent = percent;
+    const message = [action, progress].filter(Boolean).join(' ');
+    if(message) this.announce(message);
   }
 
   puzzleState()
@@ -429,6 +558,7 @@ class Jumbler
     const result = this.pointerSession.finish(pointerId, point, this.puzzleState());
     if(result.valid)
     {
+      this.keyboardSession.cancel();
       this.draw();
       this.complete();
     }
@@ -455,6 +585,7 @@ function canvasPointForPointer(event)
 CANVAS.addEventListener('pointerdown', function(event)
 {
   event.preventDefault();
+  window.jumbler.keyboard_cursor = false;
   const point = canvasPointForPointer(event);
   if(window.jumbler.pointer_down(event.pointerId, point))
   {
@@ -471,6 +602,26 @@ CANVAS.addEventListener('pointerup', function(event)
   if(CANVAS.hasPointerCapture(event.pointerId)) CANVAS.releasePointerCapture(event.pointerId);
 });
 
+CANVAS.addEventListener('keydown', function(event)
+{
+  if(event.altKey || event.ctrlKey || event.metaKey) return;
+  if(window.jumbler.key_down(event.key)) event.preventDefault();
+});
+
+CANVAS.addEventListener('focus', function()
+{
+  // The open settings panel covers the canvas, so close it to keep the focused
+  // puzzle visible; the settings toggle stays in place to reopen it.
+  Alpine.$data(document.body).menu = false;
+  window.jumbler.draw();
+});
+
+CANVAS.addEventListener('blur', function()
+{
+  window.jumbler.keyboard_cursor = false;
+  window.jumbler.draw();
+});
+
 CANVAS.addEventListener('pointercancel', function(event)
 {
   window.jumbler.pointer_cancel(event.pointerId);
@@ -483,8 +634,11 @@ CANVAS.addEventListener('lostpointercapture', function(event)
 
 function start()
 {
-  CANVAS.width = window.innerWidth;
-  CANVAS.height = window.innerHeight;
+  // The blank canvas fits inside the board's padding, where the board's
+  // overflow does not clip the canvas focus outline.
+  const padding = parseFloat(getComputedStyle(BOARD).paddingLeft);
+  CANVAS.width = Math.max(1, Math.floor(BOARD.clientWidth - padding * 2));
+  CANVAS.height = Math.max(1, Math.floor(window.innerHeight - BOARD.getBoundingClientRect().top - padding * 2));
   window.jumbler = new Jumbler();
 }
 

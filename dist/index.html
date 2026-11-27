@@ -9,8 +9,8 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Unkempt:wght@400;700&display=swap" rel="stylesheet">
     <title>Jumbler</title>
-    <script type="module" crossorigin src="/jumbler/assets/index-d0cca72a.js"></script>
-    <link rel="stylesheet" href="/jumbler/assets/index-a1fa34e3.css">
+    <script type="module" crossorigin src="/jumbler/assets/index-a8ad0362.js"></script>
+    <link rel="stylesheet" href="/jumbler/assets/index-5c89e07d.css">
   </head>
   <body
   class='min-h-screen max-h-screen font-f1 text-md'
@@ -31,21 +31,26 @@
 
         <button
         id="ORIGINAL"
+        type="button"
+        aria-label="Show original image"
+        aria-pressed="true"
         class="flex justify-center items-center active:scale-95 hover:scale-105"
         ></button>
 
-        <div
-        id="COMPLETED"
-        class="flex justify-center items-center cursor-auto mx-2"
-        ></div>
+        <p class="flex justify-center items-center cursor-auto mx-2">
+          <span class="sr-only">Completed </span><span id="COMPLETED"></span>
+        </p>
 
         <button
         id="JUMBLE"
+        type="button"
+        aria-label="Jumble tiles"
         class="flex justify-center items-center active:scale-95 hover:scale-105"
         ></button>
 
         <button
         id="SCALE_DOWN"
+        type="button"
         aria-label="Decrease puzzle scale"
         class="flex justify-center items-center active:scale-95 hover:scale-105 disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:scale-100 text-3xl"
         >-</button>
@@ -54,24 +59,24 @@
 
         <button
         id="SCALE_UP"
+        type="button"
         aria-label="Increase puzzle scale"
         class="flex justify-center items-center active:scale-95 hover:scale-105 disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:scale-100 text-3xl"
         >+</button>
 
         <button
-        id="DOWN"
+        id="MENU_TOGGLE"
+        type="button"
+        aria-label="Settings"
+        aria-controls="MENU"
+        aria-expanded="true"
         class="flex justify-center items-center active:scale-95 hover:scale-105"
-        x-show="!menu"
+        x-bind:aria-expanded="String(menu)"
         x-on:click="menu=!menu"
-        ></button>
-        
-        <button
-        id="UP"
-        class="flex justify-center items-center active:scale-95 hover:scale-105"
-        style="display:none;"
-        x-show="menu"
-        x-on:click="menu=!menu"
-        ></button>
+        >
+          <span id="DOWN" class="flex" x-show="!menu" style="display:none;"></span>
+          <span id="UP" class="flex" x-show="menu"></span>
+        </button>
 
       </div>
 
@@ -91,9 +96,12 @@
         </div>
 
         <div class='flex flex-row justify-between items-center w-[250px]'>
-          <label class='m-2' for="THEME">theme</label>
+          <span class='m-2' aria-hidden="true">theme</span>
           <button
           id="THEME"
+          type="button"
+          aria-label="Dark theme"
+          aria-pressed="false"
           class="flex justify-center items-center m-2 active:scale-95 hover:scale-105 w-20"
           ></button>
         </div>
@@ -104,13 +112,16 @@
           <select class="flex justify-center items-center rounded-lg m-4 border border-black rounded-lg p-2 active:scale-95" id="UPLOADED" style="min-width: 200px; max-width:250px"></select>    
           <button
           id="PLAY"
+          type="button"
           disabled
           class="m-2 p-2 active:scale-95 bg-mod_dark text-mod_light rounded-lg hover:bg-mod_dark_light flex justify-center items-center border border-mod_light"
           >play</button>
 
-          <label class='m-2' for="LOAD">import</label>
+          <p id="IMPORT_HEADING" class='m-2'>import</p>
 
           <div
+          role="group"
+          aria-labelledby="IMPORT_HEADING"
           class='flex flex-row justify-center items-center'>
             <input
             hidden
@@ -120,10 +131,14 @@
             multiple />
             <button
             id="SELECT"
+            type="button"
+            aria-label="Select images"
             class="m-2 p-2 active:scale-95 bg-mod_dark text-mod_light rounded-lg hover:bg-mod_dark_light flex justify-center items-center border border-mod_light"
             >select</button>
             <button
             id="LOAD"
+            type="button"
+            aria-label="Load selected images"
             class="m-2 p-2 active:scale-95 bg-mod_dark text-mod_light rounded-lg hover:bg-mod_dark_light flex justify-center items-center border border-mod_light"
             >load</button>
           </div>
@@ -135,11 +150,20 @@
 
     </nav>
 
-    <div class="absolute w-full overflow-auto top-[60px]">
+    <div id="BOARD" class="absolute w-full overflow-auto top-[60px] p-2">
       <div class="relative flex justify-center items-center w-full">
-        <canvas id="CANVAS"></canvas>
+        <canvas
+        id="CANVAS"
+        tabindex="0"
+        role="application"
+        aria-label="Jumbler puzzle"
+        aria-describedby="PUZZLE_HELP"
+        ></canvas>
       </div>
     </div>
+
+    <p id="PUZZLE_HELP" class="sr-only">Use the arrow keys to move between tiles, and Home or End to jump to the start or end of a row. Press Enter or Space to select a tile, then move to another tile and press Enter or Space to swap them. Press Escape to cancel a selection.</p>
+    <p id="PUZZLE_STATUS" role="status" aria-live="polite" class="sr-only"></p>
 
   </body>
   

@@ -113,6 +113,351 @@ async function importFiles(page, files)
   return page.locator('#STATUS').textContent();
 }
 
+function luminance(color)
+{
+  const [r, g, b] = color.match(/[\d.]+/g).slice(0, 3).map(Number).map(value => {
+    const channel = value / 255;
+    return channel <= 0.03928 ? channel / 12.92 : ((channel + 0.055) / 1.055) ** 2.4;
+  });
+  return 0.2126 * r + 0.7152 * g + 0.0722 * b;
+}
+
+function contrast(first, second)
+{
+  const [light, dark] = [luminance(first), luminance(second)].sort((a, b) => b - a);
+  return (light + 0.05) / (dark + 0.05);
+}
+
+async function focusRing(page)
+{
+  return page.evaluate(() => {
+    const element = document.activeElement;
+    const style = getComputedStyle(element);
+    return {
+      id: element.id,
+      focusVisible: element.matches(':focus-visible'),
+      outlineStyle: style.outlineStyle,
+      outlineWidth: parseFloat(style.outlineWidth),
+      outlineColor: style.outlineColor,
+      background: getComputedStyle(document.getElementById('NAV')).backgroundColor,
+    };
+  });
+}
+
+async function assertVisibleFocus(page, id)
+{
+  const ring = await focusRing(page);
+  assert.equal(ring.id, id);
+  assert.equal(ring.focusVisible, true, `${id} matches :focus-visible`);
+  assert.equal(ring.outlineStyle, 'solid');
+  assert.ok(ring.outlineWidth >= 2, `${id} focus outline is at least 2px`);
+  assert.ok(contrast(ring.outlineColor, ring.background) >= 3,
+    `${id} focus outline ${ring.outlineColor} contrasts with ${ring.background}`);
+}
+
+// Reads the rendered screenshot, not computed style, so a clipped or covered
+// outline fails. Samples a one-pixel strip 4px outside each edge, inside the
+// 3px outline drawn 2px from the element.
+async function assertRenderedFocusRing(page, selector)
+{
+  const box = await page.locator(selector).boundingBox();
+  const ring = (await focusRing(page)).outlineColor.match(/[\d.]+/g).slice(0, 3).map(Number);
+  const middleX = Math.round(box.x + box.width / 2) - 10;
+  const middleY = Math.round(box.y + box.height / 2) - 10;
+  const edges = {
+    top: { x: middleX, y: Math.floor(box.y) - 4, width: 20, height: 1 },
+    bottom: { x: middleX, y: Math.ceil(box.y + box.height) + 3, width: 20, height: 1 },
+    left: { x: Math.floor(box.x) - 4, y: middleY, width: 1, height: 20 },
+    right: { x: Math.ceil(box.x + box.width) + 3, y: middleY, width: 1, height: 20 },
+  };
+  for(const [edge, clip] of Object.entries(edges))
+  {
+    const png = await page.screenshot({ clip });
+    const pixels = await page.evaluate(async base64 => {
+      const image = new Image();
+      image.src = `data:image/png;base64,${base64}`;
+      await image.decode();
+      const canvas = document.createElement('canvas');
+      canvas.width = image.width;
+      canvas.height = image.height;
+      const context = canvas.getContext('2d');
+      context.drawImage(image, 0, 0);
+      return Array.from(context.getImageData(0, 0, image.width, image.height).data);
+    }, png.toString('base64'));
+    for(let offset = 0; offset < pixels.length; offset += 4)
+    {
+      const pixel = pixels.slice(offset, offset + 3);
+      assert.ok(pixel.every((value, channel) => Math.abs(value - ring[channel]) <= 10),
+        `${selector} focus ring is rendered on its ${edge} edge (pixel ${pixel}, ring ${ring})`);
+    }
+  }
+}
+
+// The focused canvas is on top at its centre, not covered by the settings panel.
+async function assertCanvasUncovered(page)
+{
+  await page.locator('#MENU').waitFor({ state: 'hidden' });
+  assert.equal(await page.getByRole('button', { name: 'Settings', expanded: false }).count(), 1);
+  assert.equal(await page.evaluate(() => {
+    const rect = document.getElementById('CANVAS').getBoundingClientRect();
+    return document.elementFromPoint(rect.left + rect.width / 2, rect.top + rect.height / 2)?.id;
+  }), 'CANVAS');
+}
+
+async function reopenSettingsFromCanvas(page)
+{
+  await page.keyboard.press('Shift+Tab');
+  await assertVisibleFocus(page, 'MENU_TOGGLE');
+  await page.keyboard.press('Enter');
+  await page.locator('#MENU').waitFor({ state: 'visible' });
+}
+
+async function tabTo(page, id, limit = 20)
+{
+  for(let presses = 0; presses < limit; presses++)
+  {
+    await page.keyboard.press('Tab');
+    if(await page.evaluate(() => document.activeElement.id) === id) return;
+  }
+  throw new Error(`Tab did not reach #${id}`);
+}
+
+async function canvasPixel(page, x, y)
+{
+  return page.evaluate(([px, py]) => Array.from(
+    document.getElementById('CANVAS').getContext('2d').getImageData(px, py, 1, 1).data.slice(0, 3),
+  ), [x, y]);
+}
+
+async function moveCursorTo(page, target)
+{
+  const columns = await page.evaluate(() => Number(window.jumbler.stored_columns));
+  for(;;)
+  {
+    const cursor = await page.evaluate(() => window.jumbler.keyboardSession.cursor);
+    if(cursor === target) return;
+    const [row, column] = [Math.floor(cursor / columns), cursor % columns];
+    const [targetRow, targetColumn] = [Math.floor(target / columns), target % columns];
+    if(row !== targetRow) await page.keyboard.press(row < targetRow ? 'ArrowDown' : 'ArrowUp');
+    else await page.keyboard.press(column < targetColumn ? 'ArrowRight' : 'ArrowLeft');
+  }
+}
+
+async function verifyAccessibility(browser)
+{
+  const page = await browser.newPage();
+  page.setDefaultTimeout(10000);
+  const dialogs = [];
+  page.on('dialog', dialog => {
+    dialogs.push(dialog.type());
+    dialog.accept();
+  });
+  await page.goto(url);
+  await page.waitForFunction(() => Boolean(window.jumbler));
+
+  // Accessible names, roles, and state in the rendered accessibility tree.
+  const snapshot = await page.locator('body').ariaSnapshot();
+  for(const line of [
+    '- button "Show original image" [pressed]',
+    '- button "Jumble tiles"',
+    '- button "Decrease puzzle scale"',
+    '- button "Increase puzzle scale"',
+    '- button "Settings" [expanded]',
+    '- spinbutton "rows"',
+    '- spinbutton "columns"',
+    '- button "Dark theme"',
+    '- combobox "current"',
+    '- button "play" [disabled]',
+    '- group "import"',
+    '- button "Select images"',
+    '- button "Load selected images"',
+    '- application "Jumbler puzzle"',
+  ]) assert.ok(snapshot.includes(line), `accessibility snapshot includes ${line}:\n${snapshot}`);
+  assert.doesNotMatch(snapshot, /- (button|spinbutton|combobox|textbox|application)(\s*\[[^\]]*\])*\s*(:|$)/m,
+    `every control has an accessible name:\n${snapshot}`);
+  assert.doesNotMatch(snapshot, /- img/, 'decorative icons are hidden from the accessibility tree');
+  assert.equal(await page.locator('svg:not([aria-hidden="true"])').count(), 0);
+  assert.equal(await page.getByRole('button', { name: 'Dark theme', pressed: false }).count(), 1);
+  assert.equal(await page.locator('#MENU_TOGGLE').getAttribute('aria-controls'), 'MENU');
+  assert.equal(await page.locator('#CANVAS').getAttribute('tabindex'), '0');
+  assert.match(await page.evaluate(() => {
+    const ids = document.getElementById('CANVAS').getAttribute('aria-describedby');
+    return document.getElementById(ids).textContent;
+  }), /arrow keys.*Enter or Space to select.*swap/s);
+  assert.equal(await page.locator('#PUZZLE_STATUS[role="status"][aria-live="polite"]').count(), 1);
+  console.log('Chromium: controls expose names, roles, pressed/expanded state, and hide decorative icons');
+
+  // Tab order and a visible focus ring with 3:1 contrast in the light theme.
+  const order = [];
+  for(let presses = 0; presses < 12; presses++)
+  {
+    await page.keyboard.press('Tab');
+    order.push(await page.evaluate(() => document.activeElement.id));
+  }
+  assert.deepEqual(order, [
+    'ORIGINAL', 'JUMBLE', 'SCALE_DOWN', 'SCALE_UP', 'MENU_TOGGLE', 'ROWS', 'COLUMNS', 'THEME', 'UPLOADED',
+    'SELECT', 'LOAD', 'CANVAS',
+  ]);
+  await assertCanvasUncovered(page);
+  await reopenSettingsFromCanvas(page);
+  await page.keyboard.press('Tab');
+  await assertVisibleFocus(page, 'ROWS');
+
+  await page.locator('#ORIGINAL').focus();
+  await tabTo(page, 'MENU_TOGGLE');
+  await assertVisibleFocus(page, 'MENU_TOGGLE');
+  await page.keyboard.press('Enter');
+  await page.locator('#MENU').waitFor({ state: 'hidden' });
+  assert.equal(await page.getByRole('button', { name: 'Settings', expanded: false }).count(), 1);
+  await assertVisibleFocus(page, 'MENU_TOGGLE');
+  await page.keyboard.press('Tab');
+  assert.equal(await page.evaluate(() => document.activeElement.id), 'CANVAS');
+  await page.keyboard.press('Shift+Tab');
+  await page.keyboard.press('Space');
+  await page.locator('#MENU').waitFor({ state: 'visible' });
+  assert.equal(await page.getByRole('button', { name: 'Settings', expanded: true }).count(), 1);
+  await assertVisibleFocus(page, 'MENU_TOGGLE');
+  await page.keyboard.press('Tab');
+  assert.equal(await page.evaluate(() => document.activeElement.id), 'ROWS');
+  console.log('Chromium: tab order is stable and focus stays on the settings toggle as it collapses and expands');
+
+  // The theme toggle keeps focus and the ring keeps its contrast in the dark theme.
+  await tabTo(page, 'THEME');
+  await page.keyboard.press('Enter');
+  assert.equal(await page.getByRole('button', { name: 'Dark theme', pressed: true }).count(), 1);
+  assert.equal(await page.evaluate(() => document.documentElement.dataset.theme), 'dark');
+  await assertVisibleFocus(page, 'THEME');
+  await page.keyboard.press('Shift+Tab');
+  await page.keyboard.press('Shift+Tab');
+  await assertVisibleFocus(page, 'ROWS');
+  await tabTo(page, 'THEME');
+  await page.keyboard.press('Space');
+  assert.equal(await page.evaluate(() => document.documentElement.dataset.theme), 'light');
+  await assertVisibleFocus(page, 'THEME');
+  console.log('Chromium: focus ring contrasts in light and dark themes and theme toggling keeps focus');
+
+  // Tabbing from open settings to the empty canvas closes them and shows its whole focus ring.
+  assert.equal(await page.locator('#MENU').isVisible(), true);
+  await tabTo(page, 'CANVAS');
+  await assertVisibleFocus(page, 'CANVAS');
+  await assertCanvasUncovered(page);
+  await assertRenderedFocusRing(page, '#CANVAS');
+  await reopenSettingsFromCanvas(page);
+  console.log('Chromium: focusing the empty canvas closes settings and its focus ring is rendered on every edge');
+
+  // Keyboard-only play: import, play, focus the canvas, select and swap tiles.
+  await page.locator('#CANVAS').focus();
+  await page.keyboard.press('ArrowRight');
+  assert.match(await page.locator('#PUZZLE_STATUS').textContent(), /^No puzzle yet/);
+  await reopenSettingsFromCanvas(page);
+  await page.locator('#IMPORT').setInputFiles([{ name: 'keyboard.png', mimeType: 'image/png', buffer: await fixture(page, 256, 256) }]);
+  await tabTo(page, 'LOAD');
+  await page.keyboard.press('Enter');
+  await page.waitForFunction(() => !window.jumbler.importing && !document.getElementById('PLAY').disabled);
+  await page.locator('#UPLOADED').focus();
+  await tabTo(page, 'PLAY');
+  await page.keyboard.press('Enter');
+  assert.equal(await page.evaluate(() => window.jumbler.fragments.length), 16);
+  assert.match(await page.locator('#PUZZLE_STATUS').textContent(), /Puzzle ready/);
+
+  const blue = [49, 102, 177];
+  assert.deepEqual(await canvasPixel(page, 1, 1), blue);
+  assert.equal(await page.locator('#MENU').isVisible(), true);
+  await tabTo(page, 'CANVAS');
+  await assertVisibleFocus(page, 'CANVAS');
+  await assertCanvasUncovered(page);
+  await assertRenderedFocusRing(page, '#CANVAS');
+  assert.deepEqual(await canvasPixel(page, 1, 1), [0, 0, 0], 'the virtual cursor is drawn on the focused canvas');
+  assert.deepEqual(await canvasPixel(page, 19, 19), blue);
+
+  await page.keyboard.press('ArrowRight');
+  assert.equal(await page.locator('#PUZZLE_STATUS').textContent(), 'row 1, column 2.');
+  const tile1 = await page.evaluate(() => window.jumbler.fragments[1]);
+  assert.deepEqual(await canvasPixel(page, tile1.x + 1, tile1.y + 1), [0, 0, 0]);
+  assert.deepEqual(await canvasPixel(page, 1, 1), blue, 'the cursor moves off the first tile');
+  assert.equal(await page.evaluate(() => window.scrollY), 0, 'arrow keys do not scroll the page');
+
+  await page.keyboard.press('Enter');
+  assert.match(await page.locator('#PUZZLE_STATUS').textContent(), /Showing the original image/);
+  assert.equal(await page.evaluate(() => window.jumbler.keyboardSession.selected), null);
+
+  await page.locator('#ORIGINAL').click();
+  assert.equal(await page.getByRole('button', { name: 'Show original image', pressed: false }).count(), 1);
+  await page.locator('#CANVAS').focus();
+  await page.keyboard.press('ArrowLeft');
+  await page.keyboard.press('Enter');
+  assert.match(await page.locator('#PUZZLE_STATUS').textContent(), /^Selected row 1, column 1\./);
+  assert.notDeepEqual(await canvasPixel(page, 19, 19), blue, 'the selected tile is highlighted');
+  await page.keyboard.press('ArrowDown');
+  await page.keyboard.press('ArrowRight');
+  await page.keyboard.press('Space');
+  assert.equal(await page.locator('#PUZZLE_STATUS').textContent(),
+    'Swapped row 1, column 1 with row 2, column 2. 87% complete.');
+  assert.equal(await page.locator('#COMPLETED').textContent(), '87%');
+  assert.equal(await page.evaluate(() => {
+    const { fragments, original } = window.jumbler;
+    return fragments[0].frag === original[5].frag && fragments[5].frag === original[0].frag;
+  }), true);
+
+  await page.keyboard.press('Enter');
+  await page.keyboard.press('Escape');
+  assert.equal(await page.locator('#PUZZLE_STATUS').textContent(), 'Selection cancelled.');
+  assert.equal(await page.evaluate(() => window.jumbler.keyboardSession.selected), null);
+  await page.keyboard.press('Enter');
+  await page.keyboard.press('Enter');
+  assert.equal(await page.locator('#PUZZLE_STATUS').textContent(), 'Deselected row 2, column 2.');
+  console.log('Chromium: keyboard selects, swaps, cancels, and deselects tiles with a drawn cursor and status');
+
+  // Pointer swaps still work alongside the keyboard.
+  assert.equal(await page.locator('#MENU').isHidden(), true);
+  const box = await page.locator('#CANVAS').boundingBox();
+  const [first, second] = await page.evaluate(() => window.jumbler.fragments.slice(0, 2).map(tile => ({
+    x: tile.x + tile.width / 2, y: tile.y + tile.height / 2,
+  })));
+  await page.mouse.move(box.x + first.x, box.y + first.y);
+  await page.mouse.down();
+  await page.mouse.move(box.x + second.x, box.y + second.y);
+  await page.mouse.up();
+  assert.equal(await page.evaluate(() => {
+    const { fragments, original } = window.jumbler;
+    return fragments[0].frag === original[1].frag && fragments[1].frag === original[5].frag;
+  }), true);
+  assert.deepEqual(await canvasPixel(page, 1, 1), blue, 'a pointer swap does not draw the keyboard cursor');
+  await page.locator('#MENU_TOGGLE').focus();
+  await page.keyboard.press('Tab');
+  await assertVisibleFocus(page, 'CANVAS');
+  await assertRenderedFocusRing(page, '#CANVAS');
+  console.log('Chromium: pointer swaps are preserved');
+
+  // Solve a jumbled puzzle by keyboard; completion is announced, not alerted.
+  await page.locator('#JUMBLE').click();
+  assert.deepEqual(dialogs, ['confirm']);
+  assert.match(await page.locator('#PUZZLE_STATUS').textContent(), /^Tiles jumbled\. \d+% complete\.$/);
+  await page.locator('#CANVAS').focus();
+  let announcements = 0;
+  for(let target = 0; target < 16; target++)
+  {
+    const source = await page.evaluate(index => {
+      const { fragments, original } = window.jumbler;
+      return fragments.findIndex(tile => tile.frag === original[index].frag);
+    }, target);
+    if(source === target) continue;
+    await moveCursorTo(page, source);
+    await page.keyboard.press('Enter');
+    await moveCursorTo(page, target);
+    await page.keyboard.press('Enter');
+    assert.match(await page.locator('#PUZZLE_STATUS').textContent(), /^Swapped row \d+, column \d+ with row \d+, column \d+\./);
+    announcements++;
+  }
+  assert.ok(announcements > 0);
+  assert.equal(await page.locator('#PUZZLE_STATUS').textContent().then(text => text.endsWith('Puzzle complete. Well done!')), true);
+  assert.equal(await page.locator('#COMPLETED').textContent(), '100%');
+  assert.deepEqual(dialogs, ['confirm'], 'completion does not open an alert');
+  console.log('Chromium: a jumbled puzzle can be solved by keyboard and completion is announced politely');
+
+  await page.close();
+}
+
 try
 {
   await waitForServer();
@@ -252,6 +597,8 @@ try
   assert.match(status, /decoded pixel limit/);
   assert.equal(await page.locator('#UPLOADED option').count(), 2);
   console.log('Chromium: decoded-image library pixel budget is enforced');
+
+  await verifyAccessibility(browser);
 }
 catch(error)
 {
