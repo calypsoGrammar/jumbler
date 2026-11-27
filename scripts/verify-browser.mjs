@@ -193,6 +193,25 @@ async function assertRenderedFocusRing(page, selector)
   }
 }
 
+// The focused canvas is on top at its centre, not covered by the settings panel.
+async function assertCanvasUncovered(page)
+{
+  await page.locator('#MENU').waitFor({ state: 'hidden' });
+  assert.equal(await page.getByRole('button', { name: 'Settings', expanded: false }).count(), 1);
+  assert.equal(await page.evaluate(() => {
+    const rect = document.getElementById('CANVAS').getBoundingClientRect();
+    return document.elementFromPoint(rect.left + rect.width / 2, rect.top + rect.height / 2)?.id;
+  }), 'CANVAS');
+}
+
+async function reopenSettingsFromCanvas(page)
+{
+  await page.keyboard.press('Shift+Tab');
+  await assertVisibleFocus(page, 'MENU_TOGGLE');
+  await page.keyboard.press('Enter');
+  await page.locator('#MENU').waitFor({ state: 'visible' });
+}
+
 async function tabTo(page, id, limit = 20)
 {
   for(let presses = 0; presses < limit; presses++)
@@ -279,8 +298,10 @@ async function verifyAccessibility(browser)
     'ORIGINAL', 'JUMBLE', 'SCALE_DOWN', 'SCALE_UP', 'MENU_TOGGLE', 'ROWS', 'COLUMNS', 'THEME', 'UPLOADED',
     'SELECT', 'LOAD', 'CANVAS',
   ]);
-  await page.keyboard.press('Shift+Tab');
-  await assertVisibleFocus(page, 'LOAD');
+  await assertCanvasUncovered(page);
+  await reopenSettingsFromCanvas(page);
+  await page.keyboard.press('Tab');
+  await assertVisibleFocus(page, 'ROWS');
 
   await page.locator('#ORIGINAL').focus();
   await tabTo(page, 'MENU_TOGGLE');
@@ -315,22 +336,20 @@ async function verifyAccessibility(browser)
   await assertVisibleFocus(page, 'THEME');
   console.log('Chromium: focus ring contrasts in light and dark themes and theme toggling keeps focus');
 
-  // With settings collapsed, the empty canvas shows its whole focus ring.
-  await page.locator('#MENU_TOGGLE').focus();
-  await page.keyboard.press('Enter');
-  await page.locator('#MENU').waitFor({ state: 'hidden' });
-  await page.keyboard.press('Tab');
+  // Tabbing from open settings to the empty canvas closes them and shows its whole focus ring.
+  assert.equal(await page.locator('#MENU').isVisible(), true);
+  await tabTo(page, 'CANVAS');
   await assertVisibleFocus(page, 'CANVAS');
+  await assertCanvasUncovered(page);
   await assertRenderedFocusRing(page, '#CANVAS');
-  await page.keyboard.press('Shift+Tab');
-  await page.keyboard.press('Enter');
-  await page.locator('#MENU').waitFor({ state: 'visible' });
-  console.log('Chromium: the empty canvas focus ring is rendered on every edge, unclipped');
+  await reopenSettingsFromCanvas(page);
+  console.log('Chromium: focusing the empty canvas closes settings and its focus ring is rendered on every edge');
 
   // Keyboard-only play: import, play, focus the canvas, select and swap tiles.
   await page.locator('#CANVAS').focus();
   await page.keyboard.press('ArrowRight');
   assert.match(await page.locator('#PUZZLE_STATUS').textContent(), /^No puzzle yet/);
+  await reopenSettingsFromCanvas(page);
   await page.locator('#IMPORT').setInputFiles([{ name: 'keyboard.png', mimeType: 'image/png', buffer: await fixture(page, 256, 256) }]);
   await tabTo(page, 'LOAD');
   await page.keyboard.press('Enter');
@@ -343,8 +362,11 @@ async function verifyAccessibility(browser)
 
   const blue = [49, 102, 177];
   assert.deepEqual(await canvasPixel(page, 1, 1), blue);
+  assert.equal(await page.locator('#MENU').isVisible(), true);
   await tabTo(page, 'CANVAS');
   await assertVisibleFocus(page, 'CANVAS');
+  await assertCanvasUncovered(page);
+  await assertRenderedFocusRing(page, '#CANVAS');
   assert.deepEqual(await canvasPixel(page, 1, 1), [0, 0, 0], 'the virtual cursor is drawn on the focused canvas');
   assert.deepEqual(await canvasPixel(page, 19, 19), blue);
 
@@ -386,9 +408,8 @@ async function verifyAccessibility(browser)
   assert.equal(await page.locator('#PUZZLE_STATUS').textContent(), 'Deselected row 2, column 2.');
   console.log('Chromium: keyboard selects, swaps, cancels, and deselects tiles with a drawn cursor and status');
 
-  // Pointer swaps still work alongside the keyboard once settings no longer cover the canvas.
-  await page.locator('#MENU_TOGGLE').click();
-  await page.locator('#MENU').waitFor({ state: 'hidden' });
+  // Pointer swaps still work alongside the keyboard.
+  assert.equal(await page.locator('#MENU').isHidden(), true);
   const box = await page.locator('#CANVAS').boundingBox();
   const [first, second] = await page.evaluate(() => window.jumbler.fragments.slice(0, 2).map(tile => ({
     x: tile.x + tile.width / 2, y: tile.y + tile.height / 2,

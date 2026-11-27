@@ -610,6 +610,9 @@ CANVAS.addEventListener('keydown', function(event)
 
 CANVAS.addEventListener('focus', function()
 {
+  // The open settings panel covers the canvas, so close it to keep the focused
+  // puzzle visible; the settings toggle stays in place to reopen it.
+  Alpine.$data(document.body).menu = false;
   window.jumbler.draw();
 });
 
