@@ -1,4 +1,6 @@
 const down = `<svg
+aria-hidden="true"
+focusable="false"
 width="24"
 height="24"
 viewBox="0 0 24 24"
@@ -12,6 +14,8 @@ xmlns="http://www.w3.org/2000/svg"
 </svg>`;
 
 const theme = `<svg
+aria-hidden="true"
+focusable="false"
 width="24"
 height="24"
 viewBox="0 0 24 24"
@@ -31,6 +35,8 @@ xmlns="http://www.w3.org/2000/svg"
 </svg>`;
 
 const up = `<svg
+aria-hidden="true"
+focusable="false"
 width="24"
 height="24"
 viewBox="0 0 24 24"
@@ -44,6 +50,8 @@ xmlns="http://www.w3.org/2000/svg"
 </svg>`;
 
 const dice = `<svg
+aria-hidden="true"
+focusable="false"
 width="24"
 height="24"
 viewBox="0 0 24 24"
@@ -79,6 +87,8 @@ xmlns="http://www.w3.org/2000/svg"
 </svg>`;
 
 const eye = `<svg
+aria-hidden="true"
+focusable="false"
 width="24"
 height="24"
 viewBox="0 0 24 24"
@@ -100,6 +110,8 @@ xmlns="http://www.w3.org/2000/svg"
 </svg>`;
 
 const right = `<svg
+aria-hidden="true"
+focusable="false"
 width="24"
 height="24"
 viewBox="0 0 24 24"

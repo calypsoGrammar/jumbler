@@ -4,7 +4,11 @@
 
 Run `npm run dev` to start the Vite development server. Run `npm test` for the rendering-independent puzzle interaction and scaling tests and `npm run build` for the production build.
 
-Puzzle interaction uses Pointer Events for mouse, touch, and pen input. Client coordinates are converted to canvas-local coordinates without page scroll offsets; interactions outside the canvas are ignored before fragment lookup or swapping.
+`npm test` runs the Node unit tests and then `scripts/verify-browser.mjs`, which starts Vite and drives real Chromium through Playwright. Playwright is not a project dependency: the script imports the host's global install from `/usr/local/lib/node_modules/playwright/index.mjs` and uses the Chromium build in `/usr/local/share/ms-playwright` (`PLAYWRIGHT_BROWSERS_PATH`), as Archon's verify environment provides. To run it elsewhere, install Playwright globally there with `npm install --global playwright`, and install Chromium to that path with `PLAYWRIGHT_BROWSERS_PATH=/usr/local/share/ms-playwright npx playwright install chromium`. The browser checks cover image import limits, plus accessible names, roles and state taken from Playwright's accessibility snapshot, tab order, focus visibility, and keyboard play. They are not a full automated accessibility audit (axe-core is not installed).
+
+Puzzle interaction uses Pointer Events for mouse, touch, and pen input.
+
+The puzzle canvas is also keyboard-operable. Tab to it, then use the arrow keys to move the tile cursor (Home and End jump to the start or end of the row). Press Enter or Space to select a tile, move to another tile, and press Enter or Space again to swap them. Escape cancels a selection. Each move, selection, and swap is announced through a polite status region, which also announces the completion percentage when a swap changes it and says when the puzzle is complete. The tile cursor only appears when the canvas has keyboard focus. Settings open and close with one persistent toggle, so focus stays put. Focus outlines use a colour that contrasts at least 3:1 with the light and dark theme backgrounds. Client coordinates are converted to canvas-local coordinates without page scroll offsets; interactions outside the canvas are ignored before fragment lookup or swapping.
 
 Columns run horizontally and rows run vertically. Tile indices are row-major: `index = row * columns + column`, starting at the top left. When canvas dimensions do not divide evenly, every pixel belongs to exactly one tile; tiles at the edges may differ by one pixel.
 
