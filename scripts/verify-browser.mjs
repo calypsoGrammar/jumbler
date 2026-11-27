@@ -8,7 +8,7 @@ process.env.PLAYWRIGHT_BROWSERS_PATH = '/usr/local/share/ms-playwright';
 const { chromium } = await import('/usr/local/lib/node_modules/playwright/index.mjs');
 
 const port = 4175;
-const url = `http://127.0.0.1:${port}/jumbler/`;
+const url = `http://127.0.0.1:${port}/`;
 const server = spawn(process.execPath, ['node_modules/vite/bin/vite.js', '--host', '127.0.0.1', '--port', String(port), '--strictPort'], {
   cwd: new URL('..', import.meta.url),
   stdio: ['ignore', 'pipe', 'pipe'],

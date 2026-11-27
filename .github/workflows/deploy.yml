@@ -43,10 +43,9 @@ jobs:
         build
       project_name: jumbler
       site_url: https://jumbler.calypsogrammar.com
-      # Served at the root of its own subdomain, so the build's base is / (vite.config.js keeps the old
-      # GitHub Pages path for local checks).
+      # Served at the root of its own subdomain, which is the base vite.config.js builds for.
       build_command: |
         npm ci --no-audit --no-fund
-        npm run build -- --base=/
+        npm run build
     secrets:
       CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}

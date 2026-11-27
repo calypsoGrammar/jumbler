@@ -1,6 +1,6 @@
 import { defineConfig } from 'vite'
 
 export default defineConfig({
-  base: '/jumbler/',
-  assetsInclude: ['**/*.svg'],
+  // Served from the root of https://jumbler.calypsogrammar.com/.
+  base: '/',
 })

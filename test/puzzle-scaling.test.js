@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { access, readFile } from 'node:fs/promises';
+import { readFile } from 'node:fs/promises';
 
 import { PointerSwapSession } from '../src/javascripts/puzzle-coordinates.js';
 import {
@@ -396,15 +396,4 @@ test('documented safety limits stay synchronized with the enforced constants', a
   {
     assert.match(readme, new RegExp(limit.toLocaleString('en-US')));
   }
-});
-
-test('the production page references only committed local assets', async () => {
-  const productionPage = await readFile(new URL('../dist/index.html', import.meta.url), 'utf8');
-  const assetPaths = Array.from(
-    productionPage.matchAll(/(?:href|src)="\/jumbler\/(assets\/[^"?]+)"/g),
-    match => match[1],
-  );
-
-  assert.ok(assetPaths.length > 0);
-  await Promise.all(assetPaths.map(assetPath => access(new URL(`../dist/${assetPath}`, import.meta.url))));
 });

@@ -1,8 +1,10 @@
 # jumbler
 
+Jumbler is a browser image puzzle, live at <https://jumbler.calypsogrammar.com/>. The `main` branch is the canonical source: `index.html` is the page, `src/` holds its scripts and styles, and `favicon.ico` is the site icon. Icons are inline SVG in `src/javascripts/svg.js`.
+
 ## Development
 
-Run `npm run dev` to start the Vite development server. Run `npm test` for the rendering-independent puzzle interaction and scaling tests and `npm run build` for the production build.
+Install dependencies with `npm ci`. Run `npm run dev` to start the Vite development server at <http://localhost:5173/>. Run `npm test` for the puzzle interaction, scaling and production build tests, and `npm run build` for the production build in `dist/`, which `npm run preview` serves. The build's base is `/`, matching the root of the live site. `dist/` is generated output and is not committed.
 
 `npm test` runs the Node unit tests and then `scripts/verify-browser.mjs`, which starts Vite and drives real Chromium through Playwright. Playwright is not a project dependency: the script imports the host's global install from `/usr/local/lib/node_modules/playwright/index.mjs` and uses the Chromium build in `/usr/local/share/ms-playwright` (`PLAYWRIGHT_BROWSERS_PATH`), as Archon's verify environment provides. To run it elsewhere, install Playwright globally there with `npm install --global playwright`, and install Chromium to that path with `PLAYWRIGHT_BROWSERS_PATH=/usr/local/share/ms-playwright npx playwright install chromium`. The browser checks cover image import limits, plus accessible names, roles and state taken from Playwright's accessibility snapshot, tab order, focus visibility, and keyboard play. They are not a full automated accessibility audit (axe-core is not installed).
 
@@ -18,5 +20,4 @@ Imports accept PNG, JPEG, WebP, and GIF files up to 10 MiB each. A selection may
 
 ## Deployment
 
-The site is published to Cloudflare Pages at <https://jumbler.calypsogrammar.com/> by hand: Actions → **deploy** → Run workflow, with **Dry run** unticked (a dry run builds and checks without publishing). `.github/workflows/deploy.yml` uses the shared Cloudflare Pages deploy in `calypsoGrammar/deploy-workflows`: it builds `dist/` with `npm ci` and `npm run build -- --base=/` (the site is served at the root of its subdomain) from a commit on `main` whose CI `build` job passed, and uploads it. Merging to `main` does not publish. To roll back, run the same workflow with an earlier commit as `ref`, or tick **rollback** to publish the `stable` tag (maintained by `stable.yml`); a rollback holds later deploys until cleared (Actions → stable → Run workflow → `clear-hold`). The repository needs the `CLOUDFLARE_API_TOKEN` secret and the `CLOUDFLARE_ACCOUNT_ID` variable.
-The committed `dist/` folder is not what is published: the deploy builds a fresh `dist/` from source.
+The site is published to Cloudflare Pages at <https://jumbler.calypsogrammar.com/> by hand: Actions → **deploy** → Run workflow, with **Dry run** unticked (a dry run builds and checks without publishing). `.github/workflows/deploy.yml` uses the shared Cloudflare Pages deploy in `calypsoGrammar/deploy-workflows`: it builds a fresh `dist/` with `npm ci` and `npm run build` from a commit on `main` whose CI `build` job passed, and uploads it. Merging to `main` does not publish. To roll back, run the same workflow with an earlier commit as `ref`, or tick **rollback** to publish the `stable` tag (maintained by `stable.yml`); a rollback holds later deploys until cleared (Actions → stable → Run workflow → `clear-hold`). The repository needs the `CLOUDFLARE_API_TOKEN` secret and the `CLOUDFLARE_ACCOUNT_ID` variable.
