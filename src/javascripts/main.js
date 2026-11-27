@@ -72,6 +72,7 @@ DOWN.innerHTML = svg.down.trim();
 
 THEME.innerHTML = svg.theme.trim();
 
+const BOARD = document.getElementById("BOARD");
 const CANVAS = document.getElementById("CANVAS");
 const c = CANVAS.getContext("2d");
 
@@ -630,8 +631,11 @@ CANVAS.addEventListener('lostpointercapture', function(event)
 
 function start()
 {
-  CANVAS.width = window.innerWidth;
-  CANVAS.height = window.innerHeight;
+  // The blank canvas fits inside the board's padding, where the board's
+  // overflow does not clip the canvas focus outline.
+  const padding = parseFloat(getComputedStyle(BOARD).paddingLeft);
+  CANVAS.width = Math.max(1, Math.floor(BOARD.clientWidth - padding * 2));
+  CANVAS.height = Math.max(1, Math.floor(window.innerHeight - BOARD.getBoundingClientRect().top - padding * 2));
   window.jumbler = new Jumbler();
 }
 

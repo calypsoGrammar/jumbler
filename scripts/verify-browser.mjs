@@ -155,6 +155,44 @@ async function assertVisibleFocus(page, id)
     `${id} focus outline ${ring.outlineColor} contrasts with ${ring.background}`);
 }
 
+// Reads the rendered screenshot, not computed style, so a clipped or covered
+// outline fails. Samples a one-pixel strip 4px outside each edge, inside the
+// 3px outline drawn 2px from the element.
+async function assertRenderedFocusRing(page, selector)
+{
+  const box = await page.locator(selector).boundingBox();
+  const ring = (await focusRing(page)).outlineColor.match(/[\d.]+/g).slice(0, 3).map(Number);
+  const middleX = Math.round(box.x + box.width / 2) - 10;
+  const middleY = Math.round(box.y + box.height / 2) - 10;
+  const edges = {
+    top: { x: middleX, y: Math.floor(box.y) - 4, width: 20, height: 1 },
+    bottom: { x: middleX, y: Math.ceil(box.y + box.height) + 3, width: 20, height: 1 },
+    left: { x: Math.floor(box.x) - 4, y: middleY, width: 1, height: 20 },
+    right: { x: Math.ceil(box.x + box.width) + 3, y: middleY, width: 1, height: 20 },
+  };
+  for(const [edge, clip] of Object.entries(edges))
+  {
+    const png = await page.screenshot({ clip });
+    const pixels = await page.evaluate(async base64 => {
+      const image = new Image();
+      image.src = `data:image/png;base64,${base64}`;
+      await image.decode();
+      const canvas = document.createElement('canvas');
+      canvas.width = image.width;
+      canvas.height = image.height;
+      const context = canvas.getContext('2d');
+      context.drawImage(image, 0, 0);
+      return Array.from(context.getImageData(0, 0, image.width, image.height).data);
+    }, png.toString('base64'));
+    for(let offset = 0; offset < pixels.length; offset += 4)
+    {
+      const pixel = pixels.slice(offset, offset + 3);
+      assert.ok(pixel.every((value, channel) => Math.abs(value - ring[channel]) <= 10),
+        `${selector} focus ring is rendered on its ${edge} edge (pixel ${pixel}, ring ${ring})`);
+    }
+  }
+}
+
 async function tabTo(page, id, limit = 20)
 {
   for(let presses = 0; presses < limit; presses++)
@@ -277,6 +315,18 @@ async function verifyAccessibility(browser)
   await assertVisibleFocus(page, 'THEME');
   console.log('Chromium: focus ring contrasts in light and dark themes and theme toggling keeps focus');
 
+  // With settings collapsed, the empty canvas shows its whole focus ring.
+  await page.locator('#MENU_TOGGLE').focus();
+  await page.keyboard.press('Enter');
+  await page.locator('#MENU').waitFor({ state: 'hidden' });
+  await page.keyboard.press('Tab');
+  await assertVisibleFocus(page, 'CANVAS');
+  await assertRenderedFocusRing(page, '#CANVAS');
+  await page.keyboard.press('Shift+Tab');
+  await page.keyboard.press('Enter');
+  await page.locator('#MENU').waitFor({ state: 'visible' });
+  console.log('Chromium: the empty canvas focus ring is rendered on every edge, unclipped');
+
   // Keyboard-only play: import, play, focus the canvas, select and swap tiles.
   await page.locator('#CANVAS').focus();
   await page.keyboard.press('ArrowRight');
@@ -352,6 +402,10 @@ async function verifyAccessibility(browser)
     return fragments[0].frag === original[1].frag && fragments[1].frag === original[5].frag;
   }), true);
   assert.deepEqual(await canvasPixel(page, 1, 1), blue, 'a pointer swap does not draw the keyboard cursor');
+  await page.locator('#MENU_TOGGLE').focus();
+  await page.keyboard.press('Tab');
+  await assertVisibleFocus(page, 'CANVAS');
+  await assertRenderedFocusRing(page, '#CANVAS');
   console.log('Chromium: pointer swaps are preserved');
 
   // Solve a jumbled puzzle by keyboard; completion is announced, not alerted.
