@@ -1,6 +1,9 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { access, readFile } from 'node:fs/promises';
+import { access, mkdtemp, readFile, rm } from 'node:fs/promises';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
+import { build } from 'vite';
 
 import { PointerSwapSession } from '../src/javascripts/puzzle-coordinates.js';
 import {
@@ -398,13 +401,22 @@ test('documented safety limits stay synchronized with the enforced constants', a
   }
 });
 
-test('the production page references only committed local assets', async () => {
-  const productionPage = await readFile(new URL('../dist/index.html', import.meta.url), 'utf8');
-  const assetPaths = Array.from(
-    productionPage.matchAll(/(?:href|src)="\/jumbler\/(assets\/[^"?]+)"/g),
-    match => match[1],
-  );
+test('the production page references only local assets served from the site root', async () => {
+  const outDir = await mkdtemp(join(tmpdir(), 'jumbler-build-'));
+  try
+  {
+    await build({ logLevel: 'silent', build: { outDir, emptyOutDir: true } });
+    const productionPage = await readFile(join(outDir, 'index.html'), 'utf8');
+    const references = Array.from(productionPage.matchAll(/(?:href|src)="([^"?]+)"/g), match => match[1])
+      .filter(reference => !/^https?:/.test(reference));
 
-  assert.ok(assetPaths.length > 0);
-  await Promise.all(assetPaths.map(assetPath => access(new URL(`../dist/${assetPath}`, import.meta.url))));
+    assert.ok(references.some(reference => reference.endsWith('.js')));
+    assert.ok(references.some(reference => reference.endsWith('.css')));
+    for(const reference of references) assert.match(reference, /^\/assets\//);
+    await Promise.all(references.map(reference => access(join(outDir, reference))));
+  }
+  finally
+  {
+    await rm(outDir, { recursive: true, force: true });
+  }
 });
